@@ -57,7 +57,7 @@ describe('HistoryTable', () => {
     expect(wrapper.text()).toContain('No entries found.')
   })
 
-  it('renders rows for each item', () => {
+  it('renders cards for each item', () => {
     const history = useHistoryStore()
     history.items = [sampleItem]
     history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
@@ -191,7 +191,6 @@ describe('HistoryTable', () => {
     const wrapper = mount(HistoryTable)
 
     await wrapper.find('[data-test="edit-btn"]').trigger('click')
-    // Edit dialog shows with empty notes input
     const notesInput = wrapper.find('[data-test="edit-notes"]')
     expect((notesInput.element as HTMLInputElement).value).toBe('')
   })
@@ -201,55 +200,56 @@ describe('HistoryTable', () => {
     const history = useHistoryStore()
     history.items = [sampleItem]
     history.meta = { current_page: 1, last_page: 2, per_page: 25, total: 30 }
-    history.filters.sort = undefined // explicitly undefined — triggers ?? '-date'
+    history.filters.sort = undefined
     const wrapper = mount(HistoryTable)
 
-    const th = wrapper.findAll('th').find((el) => el.text() === 'Date')
-    await th!.trigger('click')
+    // Find the "Sort by Date" button
+    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Date'))
+    await sortBtn!.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     // current was undefined ?? '-date' = '-date', which !== 'date', so sort = 'date'
     expect(history.filters.sort).toBe('date')
   })
 
-  it('sorts by hours column when clicked', async () => {
+  it('sorts by hours when Sort by Hours button clicked', async () => {
     mockLoadResponse()
     const history = useHistoryStore()
     history.items = [sampleItem]
     history.meta = { current_page: 1, last_page: 2, per_page: 25, total: 30 }
     const wrapper = mount(HistoryTable)
 
-    const th = wrapper.findAll('th').find((el) => el.text() === 'Hours')
-    await th!.trigger('click')
+    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Hours'))
+    await sortBtn!.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     expect(history.filters.sort).toBe('hours')
   })
 
-  it('sorts ascending on first click of date column', async () => {
+  it('sorts ascending on first click of date sort button', async () => {
     mockLoadResponse()
     const history = useHistoryStore()
     history.items = [sampleItem]
     history.meta = { current_page: 1, last_page: 2, per_page: 25, total: 30 }
     const wrapper = mount(HistoryTable)
 
-    const th = wrapper.findAll('th').find((el) => el.text() === 'Date')
-    await th!.trigger('click')
+    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Date'))
+    await sortBtn!.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     expect(history.filters.sort).toBe('date')
   })
 
-  it('sorts descending on second click of date column', async () => {
+  it('sorts descending on second click of date sort button', async () => {
     mockLoadResponse()
     const history = useHistoryStore()
     history.items = [sampleItem]
     history.meta = { current_page: 1, last_page: 2, per_page: 25, total: 30 }
-    history.filters.sort = 'date' // already sorted asc
+    history.filters.sort = 'date'
     const wrapper = mount(HistoryTable)
 
-    const th = wrapper.findAll('th').find((el) => el.text() === 'Date')
-    await th!.trigger('click')
+    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Date'))
+    await sortBtn!.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     expect(history.filters.sort).toBe('-date')
@@ -306,7 +306,6 @@ describe('HistoryTable', () => {
     history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 0 }
     const wrapper = mount(HistoryTable)
 
-    // defineExpose unwraps refs — vm.editItem is already the value (null), not a ref
     const vm = wrapper.vm as unknown as {
       saveEdit: () => Promise<void>
       editItem: null
@@ -340,7 +339,6 @@ describe('HistoryTable', () => {
     const wrapper = mount(HistoryTable)
 
     await wrapper.find('[data-test="edit-btn"]').trigger('click')
-    // Clear the notes field
     const notesInput = wrapper.find('[data-test="edit-notes"]')
     await notesInput.setValue('')
     await wrapper.find('[data-test="edit-save"]').trigger('click')

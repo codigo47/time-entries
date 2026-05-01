@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/history'
 import { api } from '@/services/api'
 import type { TimeEntryDto } from '@shared/types'
@@ -91,11 +92,12 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
       class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       data-test="edit-dialog"
     >
-      <div class="bg-white rounded p-6 w-80 space-y-3">
-        <h3 class="font-semibold">
+      <div class="bg-white rounded-lg border border-border p-6 w-80 space-y-3 shadow-lg">
+        <h3 class="font-semibold text-foreground">
           Edit Entry
         </h3>
-        <label class="block text-sm">Hours
+        <label class="block text-sm text-foreground">
+          <span class="text-xs text-muted-foreground mb-1 block">Hours</span>
           <input
             v-model.number="editHours"
             data-test="edit-hours"
@@ -103,22 +105,31 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
             step="0.25"
             min="0.25"
             max="24"
-            class="block w-full border rounded px-2 py-1"
+            class="block w-full border border-border rounded px-2 py-1.5 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring/50"
           />
         </label>
-        <label class="block text-sm">Notes
+        <label class="block text-sm text-foreground">
+          <span class="text-xs text-muted-foreground mb-1 block">Notes</span>
           <input
             v-model="editNotes"
             data-test="edit-notes"
             type="text"
-            class="block w-full border rounded px-2 py-1"
+            class="block w-full border border-border rounded px-2 py-1.5 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring/50"
           />
         </label>
         <div class="flex gap-2 justify-end">
-          <button data-test="edit-cancel" @click="cancelEdit">
+          <button
+            data-test="edit-cancel"
+            class="text-sm px-3 py-1.5 rounded border border-border hover:bg-muted transition-colors cursor-pointer bg-transparent"
+            @click="cancelEdit"
+          >
             Cancel
           </button>
-          <button data-test="edit-save" @click="saveEdit">
+          <button
+            data-test="edit-save"
+            class="text-sm px-3 py-1.5 rounded bg-primary text-primary-foreground border-none hover:opacity-90 transition-opacity cursor-pointer"
+            @click="saveEdit"
+          >
             Save
           </button>
         </div>
@@ -131,94 +142,138 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
       class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
       data-test="delete-dialog"
     >
-      <div class="bg-white rounded p-6 w-72 space-y-3">
-        <h3 class="font-semibold">
+      <div class="bg-white rounded-lg border border-border p-6 w-72 space-y-3 shadow-lg">
+        <h3 class="font-semibold text-foreground">
           Delete Entry?
         </h3>
-        <p class="text-sm">
+        <p class="text-sm text-muted-foreground">
           This cannot be undone.
         </p>
         <div class="flex gap-2 justify-end">
-          <button data-test="delete-cancel" @click="cancelDelete">
+          <button
+            data-test="delete-cancel"
+            class="text-sm px-3 py-1.5 rounded border border-border hover:bg-muted transition-colors cursor-pointer bg-transparent"
+            @click="cancelDelete"
+          >
             Cancel
           </button>
-          <button data-test="delete-confirm" class="text-red-600" @click="doDelete">
+          <button
+            data-test="delete-confirm"
+            class="text-sm px-3 py-1.5 rounded bg-destructive text-destructive-foreground border-none hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1.5"
+            @click="doDelete"
+          >
+            <Trash2 class="size-4" />
             Delete
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Data table -->
-    <table class="w-full text-sm">
-      <thead>
-        <tr>
-          <th class="cursor-pointer text-left" @click="setSort('date')">
-            Date
-          </th>
-          <th class="text-left">
-            Employee
-          </th>
-          <th class="text-left">
-            Project
-          </th>
-          <th class="text-left">
-            Task
-          </th>
-          <th class="cursor-pointer text-left" @click="setSort('hours')">
-            Hours
-          </th>
-          <th class="text-left">
-            Notes
-          </th>
-          <th />
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="history.items.length === 0">
-          <td colspan="7" class="text-center py-4 text-gray-500">
-            No entries found.
-          </td>
-        </tr>
-        <tr
-          v-for="item in history.items"
-          :key="item.id"
-          data-test="history-row"
-        >
-          <td>{{ item.date }}</td>
-          <td>{{ item.employee?.name ?? item.employee_id }}</td>
-          <td>{{ item.project?.name ?? item.project_id }}</td>
-          <td>{{ item.task?.name ?? item.task_id }}</td>
-          <td>{{ item.hours }}</td>
-          <td>{{ item.notes }}</td>
-          <td class="flex gap-1">
-            <button data-test="edit-btn" @click="startEdit(item)">
-              Edit
+    <!-- Sort controls -->
+    <div class="flex gap-4 mb-3 text-xs text-muted-foreground">
+      <button
+        class="hover:text-foreground transition-colors cursor-pointer bg-transparent border-none"
+        @click="setSort('date')"
+      >
+        Sort by Date
+      </button>
+      <button
+        class="hover:text-foreground transition-colors cursor-pointer bg-transparent border-none"
+        @click="setSort('hours')"
+      >
+        Sort by Hours
+      </button>
+    </div>
+
+    <!-- Empty state -->
+    <div
+      v-if="history.items.length === 0"
+      class="text-center py-8 text-muted-foreground text-sm"
+    >
+      No entries found.
+    </div>
+
+    <!-- History cards -->
+    <div class="space-y-3">
+      <div
+        v-for="item in history.items"
+        :key="item.id"
+        data-test="history-row"
+        data-test-card="history-card"
+        class="rounded-lg border border-border bg-card p-4"
+      >
+        <!-- Line 1: Company · Date · Employee · Project -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-3">
+          <div>
+            <p class="text-xs text-muted-foreground mb-0.5">Date</p>
+            <p class="text-sm font-medium text-foreground">{{ item.date }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground mb-0.5">Employee</p>
+            <p class="text-sm text-foreground">{{ item.employee?.name ?? item.employee_id }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground mb-0.5">Project</p>
+            <p class="text-sm text-foreground">{{ item.project?.name ?? item.project_id }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-muted-foreground mb-0.5">Task</p>
+            <p class="text-sm text-foreground">{{ item.task?.name ?? item.task_id }}</p>
+          </div>
+        </div>
+
+        <!-- Line 2: Hours · Notes · Actions -->
+        <div class="flex flex-wrap items-end gap-4">
+          <div class="min-w-[80px]">
+            <p class="text-xs text-muted-foreground mb-0.5">Hours</p>
+            <p class="text-sm font-medium text-foreground text-right">{{ item.hours }}</p>
+          </div>
+          <div class="flex-1">
+            <p class="text-xs text-muted-foreground mb-0.5">Notes</p>
+            <p class="text-sm text-foreground">{{ item.notes ?? '—' }}</p>
+          </div>
+          <div class="flex items-center gap-1 ml-auto">
+            <button
+              data-test="edit-btn"
+              aria-label="Edit entry"
+              title="Edit entry"
+              class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted border-none bg-transparent cursor-pointer transition-colors"
+              @click="startEdit(item)"
+            >
+              <Pencil class="size-4" />
             </button>
-            <button data-test="delete-btn" @click="confirmDelete(item.id)">
-              Delete
+            <button
+              data-test="delete-btn"
+              aria-label="Delete entry"
+              title="Delete entry"
+              class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-none bg-transparent cursor-pointer transition-colors"
+              @click="confirmDelete(item.id)"
+            >
+              <Trash2 class="size-4" />
             </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Pagination -->
-    <div class="flex items-center gap-2 mt-3" data-test="pagination">
+    <div class="flex items-center gap-2 mt-4" data-test="pagination">
       <button
         data-test="page-prev"
         :disabled="history.meta.current_page <= 1"
+        class="inline-flex items-center justify-center size-8 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer bg-transparent"
         @click="setPage(history.meta.current_page - 1)"
       >
-        Prev
+        <ChevronLeft class="size-4" />
       </button>
-      <span>Page {{ history.meta.current_page }} of {{ history.meta.last_page }}</span>
+      <span class="text-sm text-muted-foreground">Page {{ history.meta.current_page }} of {{ history.meta.last_page }}</span>
       <button
         data-test="page-next"
         :disabled="history.meta.current_page >= history.meta.last_page"
+        class="inline-flex items-center justify-center size-8 rounded-md border border-border text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer bg-transparent"
         @click="setPage(history.meta.current_page + 1)"
       >
-        Next
+        <ChevronRight class="size-4" />
       </button>
     </div>
   </div>
