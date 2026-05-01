@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
+import { Copy, Trash2 } from 'lucide-vue-next'
 import type { TimeEntryDraft } from '@shared/schemas/timeEntry'
 import { useLookupsStore } from '@/stores/lookups'
 
@@ -23,6 +24,9 @@ const projects = computed(() =>
 const tasks = computed(() =>
   props.draft.company_id ? lookups.tasksByCompany[props.draft.company_id] ?? [] : [])
 
+const hasErrors = computed(() => Object.keys(props.rowErrors).length > 0)
+const errorCount = computed(() => Object.keys(props.rowErrors).length)
+
 watch(() => props.draft.company_id, async (id) => {
   if (!id) return
   await Promise.all([
@@ -41,138 +45,164 @@ function err(field: string): string | undefined {
   return props.rowErrors[field]?.[0]
 }
 
-const cellClass = 'px-3 py-2 border-b border-border align-top'
-const inputClass = 'w-full bg-transparent border border-border rounded px-2 py-1 text-sm text-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring/50'
-const selectClass = 'w-full bg-background border border-border rounded px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer'
+const labelClass = 'block text-xs text-muted-foreground mb-1'
+const inputClass = 'w-full bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground outline-none focus:border-ring focus:ring-1 focus:ring-ring/50'
+const selectClass = 'w-full bg-background border border-border rounded px-2 py-1.5 text-sm text-foreground outline-none focus:border-ring cursor-pointer'
 </script>
 
 <template>
-  <tr
+  <div
     data-test="entry-row"
-    class="hover:bg-muted/50 transition-colors"
+    class="rounded-lg border bg-card p-4 transition-colors"
+    :class="hasErrors ? 'border-destructive ring-2 ring-destructive/30' : 'border-border'"
   >
-    <!-- Company -->
-    <td :class="cellClass">
-      <select
-        data-test="company-select"
-        :value="draft.company_id"
-        :class="[selectClass, err('company_id') ? 'border-destructive' : '']"
-        @change="set('company_id', ($event.target as HTMLSelectElement).value)"
-      >
-        <option value="">Select…</option>
-        <option v-for="c in lookups.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
-      </select>
-      <p v-if="err('company_id')" class="text-xs text-destructive mt-1" data-test="err-company_id">
-        {{ err('company_id') }}
-      </p>
-    </td>
+    <!-- Error badge -->
+    <div v-if="hasErrors" class="flex justify-end mb-2">
+      <span class="text-xs text-destructive font-medium bg-destructive/10 px-2 py-0.5 rounded-full">
+        {{ errorCount }} {{ errorCount === 1 ? 'issue' : 'issues' }}
+      </span>
+    </div>
 
-    <!-- Date -->
-    <td :class="cellClass">
-      <input
-        data-test="date-input"
-        type="date"
-        :value="draft.date"
-        :class="inputClass"
-        @input="set('date', ($event.target as HTMLInputElement).value)"
-      />
-    </td>
+    <!-- Line 1: Company · Date · Employee · Project -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <!-- Company -->
+      <div>
+        <label :class="labelClass">Company</label>
+        <select
+          data-test="company-select"
+          :value="draft.company_id"
+          :class="[selectClass, err('company_id') ? 'border-destructive' : '']"
+          @change="set('company_id', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Select…</option>
+          <option v-for="c in lookups.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
+        <p v-if="err('company_id')" class="text-xs text-destructive mt-1" data-test="err-company_id">
+          {{ err('company_id') }}
+        </p>
+      </div>
 
-    <!-- Employee -->
-    <td :class="cellClass">
-      <select
-        data-test="employee-select"
-        :value="draft.employee_id"
-        :disabled="!draft.company_id"
-        :class="[selectClass, err('employee_id') ? 'border-destructive' : '']"
-        @change="set('employee_id', ($event.target as HTMLSelectElement).value)"
-      >
-        <option value="">Select…</option>
-        <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
-      </select>
-      <p v-if="err('employee_id')" class="text-xs text-destructive mt-1" data-test="err-employee_id">
-        {{ err('employee_id') }}
-      </p>
-    </td>
+      <!-- Date -->
+      <div>
+        <label :class="labelClass">Date</label>
+        <input
+          data-test="date-input"
+          type="date"
+          :value="draft.date"
+          :class="inputClass"
+          @input="set('date', ($event.target as HTMLInputElement).value)"
+        />
+      </div>
 
-    <!-- Project -->
-    <td :class="cellClass">
-      <select
-        data-test="project-select"
-        :value="draft.project_id"
-        :disabled="!draft.company_id"
-        :class="[selectClass, err('project_id') ? 'border-destructive' : '']"
-        @change="set('project_id', ($event.target as HTMLSelectElement).value)"
-      >
-        <option value="">Select…</option>
-        <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-      </select>
-      <p v-if="err('project_id')" class="text-xs text-destructive mt-1" data-test="err-project_id">
-        {{ err('project_id') }}
-      </p>
-    </td>
+      <!-- Employee -->
+      <div>
+        <label :class="labelClass">Employee</label>
+        <select
+          data-test="employee-select"
+          :value="draft.employee_id"
+          :disabled="!draft.company_id"
+          :class="[selectClass, err('employee_id') ? 'border-destructive' : '']"
+          @change="set('employee_id', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Select…</option>
+          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
+        </select>
+        <p v-if="err('employee_id')" class="text-xs text-destructive mt-1" data-test="err-employee_id">
+          {{ err('employee_id') }}
+        </p>
+      </div>
 
-    <!-- Task -->
-    <td :class="cellClass">
-      <select
-        data-test="task-select"
-        :value="draft.task_id"
-        :disabled="!draft.company_id"
-        :class="[selectClass, err('task_id') ? 'border-destructive' : '']"
-        @change="set('task_id', ($event.target as HTMLSelectElement).value)"
-      >
-        <option value="">Select…</option>
-        <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
-      </select>
-      <p v-if="err('task_id')" class="text-xs text-destructive mt-1" data-test="err-task_id">
-        {{ err('task_id') }}
-      </p>
-    </td>
+      <!-- Project -->
+      <div>
+        <label :class="labelClass">Project</label>
+        <select
+          data-test="project-select"
+          :value="draft.project_id"
+          :disabled="!draft.company_id"
+          :class="[selectClass, err('project_id') ? 'border-destructive' : '']"
+          @change="set('project_id', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Select…</option>
+          <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+        </select>
+        <p v-if="err('project_id')" class="text-xs text-destructive mt-1" data-test="err-project_id">
+          {{ err('project_id') }}
+        </p>
+      </div>
+    </div>
 
-    <!-- Hours — right-aligned, sans-serif -->
-    <td :class="cellClass" style="text-align: right;">
-      <input
-        data-test="hours-input"
-        type="number"
-        step="0.25"
-        min="0.25"
-        max="24"
-        :value="draft.hours"
-        :class="[inputClass, err('hours') ? 'border-destructive' : '']"
-        style="width: 5rem; text-align: right;"
-        @input="set('hours', Number(($event.target as HTMLInputElement).value))"
-      />
-      <p v-if="err('hours')" class="text-xs text-destructive mt-1" data-test="err-hours" style="text-align: right;">
-        {{ err('hours') }}
-      </p>
-    </td>
+    <!-- Line 2: Task · Hours · Notes · Actions -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-[1fr_120px_1fr_auto] gap-4 items-end">
+      <!-- Task -->
+      <div>
+        <label :class="labelClass">Task</label>
+        <select
+          data-test="task-select"
+          :value="draft.task_id"
+          :disabled="!draft.company_id"
+          :class="[selectClass, err('task_id') ? 'border-destructive' : '']"
+          @change="set('task_id', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Select…</option>
+          <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
+        </select>
+        <p v-if="err('task_id')" class="text-xs text-destructive mt-1" data-test="err-task_id">
+          {{ err('task_id') }}
+        </p>
+      </div>
 
-    <!-- Notes -->
-    <td :class="cellClass">
-      <input
-        data-test="notes-input"
-        type="text"
-        :value="draft.notes ?? ''"
-        :class="inputClass"
-        placeholder="Notes"
-        @input="set('notes', ($event.target as HTMLInputElement).value)"
-      />
-    </td>
+      <!-- Hours -->
+      <div>
+        <label :class="labelClass">Hours</label>
+        <input
+          data-test="hours-input"
+          type="number"
+          step="0.25"
+          min="0.25"
+          max="24"
+          :value="draft.hours"
+          :class="[inputClass, err('hours') ? 'border-destructive' : '', 'text-right']"
+          @input="set('hours', Number(($event.target as HTMLInputElement).value))"
+        />
+        <p v-if="err('hours')" class="text-xs text-destructive mt-1 text-right" data-test="err-hours">
+          {{ err('hours') }}
+        </p>
+      </div>
 
-    <!-- Row actions -->
-    <td :class="cellClass" style="text-align: center; white-space: nowrap;">
-      <button
-        data-test="duplicate-btn"
-        title="Duplicate row"
-        class="text-xs text-muted-foreground hover:text-foreground bg-transparent border-none cursor-pointer px-1 py-0.5"
-        @click="emit('duplicate')"
-      >D</button>
-      <button
-        data-test="remove-btn"
-        title="Remove row"
-        class="text-xs text-destructive hover:text-destructive/80 bg-transparent border-none cursor-pointer px-1 py-0.5"
-        @click="emit('remove')"
-      >×</button>
-    </td>
-  </tr>
+      <!-- Notes -->
+      <div>
+        <label :class="labelClass">Notes</label>
+        <input
+          data-test="notes-input"
+          type="text"
+          :value="draft.notes ?? ''"
+          :class="inputClass"
+          placeholder="Optional notes"
+          @input="set('notes', ($event.target as HTMLInputElement).value)"
+        />
+      </div>
+
+      <!-- Actions -->
+      <div class="flex items-center gap-1 justify-end">
+        <button
+          data-test="duplicate-btn"
+          aria-label="Duplicate row"
+          title="Duplicate row"
+          class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted border-none bg-transparent cursor-pointer transition-colors"
+          @click="emit('duplicate')"
+        >
+          <Copy class="size-4" />
+        </button>
+        <button
+          data-test="remove-btn"
+          aria-label="Remove row"
+          title="Remove row"
+          class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-none bg-transparent cursor-pointer transition-colors"
+          @click="emit('remove')"
+        >
+          <Trash2 class="size-4" />
+        </button>
+      </div>
+    </div>
+  </div>
 </template>

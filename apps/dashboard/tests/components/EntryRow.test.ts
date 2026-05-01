@@ -36,11 +36,32 @@ describe('EntryRow', () => {
     vi.clearAllMocks()
   })
 
-  it('renders a table row', () => {
+  it('renders an entry card', () => {
     const wrapper = mount(EntryRow, {
       props: { draft: baseDraft, rowErrors: {} },
     })
     expect(wrapper.find('[data-test="entry-row"]').exists()).toBe(true)
+  })
+
+  it('duplicate button has aria-label', () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {} },
+    })
+    expect(wrapper.find('[data-test="duplicate-btn"]').attributes('aria-label')).toBe('Duplicate row')
+  })
+
+  it('remove button has aria-label', () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {} },
+    })
+    expect(wrapper.find('[data-test="remove-btn"]').attributes('aria-label')).toBe('Remove row')
+  })
+
+  it('shows error badge when rowErrors is non-empty', () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: { company_id: ['Required'] } },
+    })
+    expect(wrapper.find('[data-test="entry-row"]').classes()).toContain('border-destructive')
   })
 
   it('emits update:draft when company select changes', async () => {
