@@ -72,7 +72,6 @@ Used by Vite.
 ### 6. Install frontend dependencies
 
 ```bash
-cd ../..
 npm install
 ```
 
