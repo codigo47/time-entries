@@ -172,7 +172,7 @@ defineExpose({ submit, localValidate, errorsByRow, banner })
 
     <!-- Footer -->
     <div class="border border-border rounded-lg px-4 py-3 bg-card">
-      <EntryFooter @add-row="drafts.addRow()" @submit="submit" />
+      <EntryFooter @add-row="drafts.addRow({ company_id: ctx.companyId !== 'all' ? ctx.companyId : undefined })" @submit="submit" />
     </div>
   </div>
 </template>

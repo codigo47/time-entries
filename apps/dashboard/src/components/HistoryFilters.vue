@@ -4,9 +4,11 @@ import { refDebounced } from '@vueuse/core'
 import { Search, X } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/history'
 import { useLookupsStore } from '@/stores/lookups'
+import { useCompanyContextStore } from '@/stores/companyContext'
 
 const history = useHistoryStore()
 const lookups = useLookupsStore()
+const ctx = useCompanyContextStore()
 
 const employees = computed(() => {
   const id = history.filters.company_id
@@ -43,6 +45,19 @@ onMounted(async () => {
   await loadForScope()
 })
 watch(() => history.filters.company_id, loadForScope)
+
+watch(() => ctx.companyId, (companyId) => {
+  if (companyId === 'all') {
+    history.filters.company_id = undefined
+  } else {
+    history.filters.company_id = companyId
+    history.filters.employee_id = undefined
+    history.filters.project_id = undefined
+    history.filters.task_id = undefined
+  }
+  loadForScope()
+  onFilter()
+})
 
 const searchInput = ref<string>(history.filters.q ?? '')
 const debouncedSearch = refDebounced(searchInput, 300)
@@ -91,112 +106,112 @@ function clearAll() {
 
 <template>
   <div class="space-y-2" data-test="history-filters-wrapper">
-  <div
-    class="flex flex-wrap items-end gap-4"
-    data-test="history-filters"
-  >
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">From</label>
-      <input
-        type="date"
-        data-test="filter-date-from"
-        :value="history.filters.date_from ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring"
-        placeholder="date"
-        @change="history.filters.date_from = ($event.target as HTMLInputElement).value || undefined; onFilter()"
-      />
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Through</label>
-      <input
-        type="date"
-        data-test="filter-date-to"
-        :value="history.filters.date_to ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring"
-        placeholder="date"
-        @change="history.filters.date_to = ($event.target as HTMLInputElement).value || undefined; onFilter()"
-      />
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Company</label>
-      <select
-        data-test="filter-company"
-        :value="history.filters.company_id ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
-        @change="onCompanyChange(($event.target as HTMLSelectElement).value)"
-      >
-        <option value="">All companies</option>
-        <option v-for="c in lookups.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
-      </select>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Project</label>
-      <select
-        data-test="filter-project"
-        :value="history.filters.project_id ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
-        @change="history.filters.project_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
-      >
-        <option value="">All projects</option>
-        <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-      </select>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Employee</label>
-      <select
-        data-test="filter-employee"
-        :value="history.filters.employee_id ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
-        @change="history.filters.employee_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
-      >
-        <option value="">All employees</option>
-        <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
-      </select>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Task</label>
-      <select
-        data-test="filter-task"
-        :value="history.filters.task_id ?? ''"
-        :disabled="!history.filters.company_id"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        @change="history.filters.task_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
-      >
-        <option value="">All tasks</option>
-        <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
-      </select>
-    </div>
-
-    <div class="flex flex-col gap-1 flex-1 min-w-[280px]">
-      <label class="text-xs font-medium text-muted-foreground">Search (press Enter to search)</label>
-      <div class="relative">
-        <Search class="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+    <div
+      class="flex flex-wrap items-end gap-4"
+      data-test="history-filters"
+    >
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-foreground">From</label>
         <input
-          v-model="searchInput"
-          data-test="filter-search"
-          type="text"
-          placeholder="Search company, project, employee, task, notes..."
-          class="w-full rounded-md border border-border bg-background pl-8 pr-2 py-1 text-sm text-foreground outline-none focus:border-ring"
+          type="date"
+          data-test="filter-date-from"
+          :value="history.filters.date_from ?? ''"
+          class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring"
+          placeholder="date"
+          @change="history.filters.date_from = ($event.target as HTMLInputElement).value || undefined; onFilter()"
         />
       </div>
-    </div>
-  </div>
 
-  <div v-if="hasActiveFilters">
-    <button
-      type="button"
-      data-test="clear-filters"
-      class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline cursor-pointer bg-transparent border-none p-0"
-      @click="clearAll"
-    >
-      <X class="size-3" />
-      Clear filters
-    </button>
-  </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-foreground">Through</label>
+        <input
+          type="date"
+          data-test="filter-date-to"
+          :value="history.filters.date_to ?? ''"
+          class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring"
+          placeholder="date"
+          @change="history.filters.date_to = ($event.target as HTMLInputElement).value || undefined; onFilter()"
+        />
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-foreground">Company</label>
+        <select
+          data-test="filter-company"
+          :value="history.filters.company_id ?? ''"
+          class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
+          @change="onCompanyChange(($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">All companies</option>
+          <option v-for="c in lookups.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-foreground">Project</label>
+        <select
+          data-test="filter-project"
+          :value="history.filters.project_id ?? ''"
+          class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
+          @change="history.filters.project_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
+        >
+          <option value="">All projects</option>
+          <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-foreground">Employee</label>
+        <select
+          data-test="filter-employee"
+          :value="history.filters.employee_id ?? ''"
+          class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
+          @change="history.filters.employee_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
+        >
+          <option value="">All employees</option>
+          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-medium text-muted-foreground">Task</label>
+        <select
+          data-test="filter-task"
+          :value="history.filters.task_id ?? ''"
+          :disabled="!history.filters.company_id"
+          class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          @change="history.filters.task_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
+        >
+          <option value="">All tasks</option>
+          <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1 flex-1 min-w-[280px]">
+        <label class="text-xs font-medium text-muted-foreground">Search (press Enter to search)</label>
+        <div class="relative">
+          <Search class="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+          <input
+            v-model="searchInput"
+            data-test="filter-search"
+            type="text"
+            placeholder="Search company, project, employee, task, notes..."
+            class="w-full rounded-md border border-border bg-background pl-8 pr-2 py-1 text-sm text-foreground outline-none focus:border-ring"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div v-if="hasActiveFilters">
+      <button
+        type="button"
+        data-test="clear-filters"
+        class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline cursor-pointer bg-transparent border-none p-0"
+        @click="clearAll"
+      >
+        <X class="size-3" />
+        Clear filters
+      </button>
+    </div>
   </div>
 </template>

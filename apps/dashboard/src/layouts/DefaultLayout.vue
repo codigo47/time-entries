@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CompanyContext from '@/components/CompanyContext.vue'
 </script>
 
 <template>
@@ -18,6 +19,10 @@
           <span
             style="font-family: var(--font-sans); font-size: 15px; font-weight: 600; color: var(--foreground); letter-spacing: -0.01em;"
           >Mason Time Entries</span>
+        </div>
+        <!-- Global company selector -->
+        <div class="ml-auto">
+          <CompanyContext />
         </div>
       </div>
     </header>

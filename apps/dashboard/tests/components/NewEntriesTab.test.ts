@@ -92,6 +92,24 @@ describe('NewEntriesTab', () => {
     expect(drafts.rows[0]?.company_id).toBe('c1')
   })
 
+  it('seeds company_id from ctx when add-row is clicked', async () => {
+    const ctx = useCompanyContextStore()
+    ctx.companyId = 'c1'
+    const drafts = useDraftEntriesStore()
+    drafts.addRow({ _id: 'existing' })
+
+    const wrapper = mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 10))
+
+    const countBefore = drafts.rows.length
+    await wrapper.find('[data-test="add-row"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(drafts.rows.length).toBe(countBefore + 1)
+    expect(drafts.rows[drafts.rows.length - 1].company_id).toBe('c1')
+  })
+
   it('shows validation banner when localValidate fails', async () => {
     const drafts = useDraftEntriesStore()
     drafts.addRow({ _id: 'r1' }) // incomplete row
