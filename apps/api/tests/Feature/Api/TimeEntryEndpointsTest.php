@@ -102,11 +102,20 @@ it('GET /time-entries/summary returns totals by group with group_label for date'
 });
 
 it('GET /time-entries/summary returns human-readable group_label for employee', function () {
-    TimeEntry::factory()->count(2)->create([
+    TimeEntry::factory()->create([
         'company_id'  => $this->company->id,
         'employee_id' => $this->employee->id,
         'project_id'  => $this->project->id,
         'task_id'     => $this->task->id,
+        'date'        => '2026-04-25',
+        'hours'       => 3.0,
+    ]);
+    TimeEntry::factory()->create([
+        'company_id'  => $this->company->id,
+        'employee_id' => $this->employee->id,
+        'project_id'  => $this->project->id,
+        'task_id'     => $this->task->id,
+        'date'        => '2026-04-26',
         'hours'       => 3.0,
     ]);
     $response = $this->getJson('/api/v1/time-entries/summary?group_by=employee');
@@ -119,11 +128,20 @@ it('GET /time-entries/summary returns human-readable group_label for employee', 
 });
 
 it('GET /time-entries/summary returns human-readable group_label for company', function () {
-    TimeEntry::factory()->count(2)->create([
+    TimeEntry::factory()->create([
         'company_id'  => $this->company->id,
         'employee_id' => $this->employee->id,
         'project_id'  => $this->project->id,
         'task_id'     => $this->task->id,
+        'date'        => '2026-04-25',
+        'hours'       => 2.0,
+    ]);
+    TimeEntry::factory()->create([
+        'company_id'  => $this->company->id,
+        'employee_id' => $this->employee->id,
+        'project_id'  => $this->project->id,
+        'task_id'     => $this->task->id,
+        'date'        => '2026-04-26',
         'hours'       => 2.0,
     ]);
     $response = $this->getJson('/api/v1/time-entries/summary?group_by=company');
