@@ -26,7 +26,7 @@ const globalStubs = {
   EntryRow: {
     props: ['draft', 'rowErrors'],
     emits: ['update:draft', 'duplicate', 'remove'],
-    template: '<tr data-test="entry-row-stub"><td>{{ draft._id }}</td></tr>',
+    template: '<div data-test="entry-row-stub">{{ draft._id }}</div>',
   },
   EntryFooter: {
     emits: ['add-row', 'submit'],
@@ -78,7 +78,7 @@ describe('NewEntriesTab', () => {
     await wrapper.find('[data-test="submit"]').trigger('click')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-test="banner"]').text()).toBe('Fix highlighted issues and try again.')
+    expect(wrapper.find('[data-test="banner"]').text()).toContain('Fix highlighted issues and try again.')
   })
 
   it('posts batch on submit with valid rows', async () => {
@@ -134,7 +134,7 @@ describe('NewEntriesTab', () => {
     await wrapper.vm.$nextTick()
     await new Promise((r) => setTimeout(r, 10))
 
-    expect(wrapper.find('[data-test="banner"]').text()).toBe('Server rejected one or more rows.')
+    expect(wrapper.find('[data-test="banner"]').text()).toContain('Server rejected one or more rows.')
   })
 
   it('detects cross-row conflict: same employee+date, different project', async () => {
@@ -168,7 +168,7 @@ describe('NewEntriesTab', () => {
     await wrapper.find('[data-test="submit"]').trigger('click')
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-test="banner"]').text()).toBe('Fix highlighted issues and try again.')
+    expect(wrapper.find('[data-test="banner"]').text()).toContain('Fix highlighted issues and try again.')
   })
 
   it('add-row event from footer adds a row', async () => {
@@ -220,7 +220,7 @@ describe('NewEntriesTab', () => {
     // defineExpose unwraps refs — vm.errorsByRow gives the plain object directly
     const vm = wrapper.vm as unknown as { errorsByRow: Record<number, Record<string, string[]>> }
     expect(vm.errorsByRow[0]?.hours).toEqual(['Too many hours'])
-    expect(wrapper.find('[data-test="banner"]').text()).toBe('Server rejected one or more rows.')
+    expect(wrapper.find('[data-test="banner"]').text()).toContain('Server rejected one or more rows.')
   })
 
   it('update:draft event on EntryRow stub updates the row', async () => {
@@ -241,11 +241,11 @@ describe('NewEntriesTab', () => {
     const EmittingEntryRow = {
       props: ['draft', 'rowErrors'],
       emits: ['update:draft', 'duplicate', 'remove'],
-      template: `<tr>
-        <td><button data-test="update-draft-btn" @click="$emit('update:draft', { ...$props.draft, hours: 6 })">Update</button></td>
-        <td><button data-test="duplicate-btn" @click="$emit('duplicate')">Dup</button></td>
-        <td><button data-test="remove-btn" @click="$emit('remove')">Rem</button></td>
-      </tr>`,
+      template: `<div>
+        <button data-test="update-draft-btn" @click="$emit('update:draft', { ...$props.draft, hours: 6 })">Update</button>
+        <button data-test="duplicate-btn" @click="$emit('duplicate')">Dup</button>
+        <button data-test="remove-btn" @click="$emit('remove')">Rem</button>
+      </div>`,
     }
 
     const wrapper = mount(NewEntriesTab, {
@@ -272,7 +272,7 @@ describe('NewEntriesTab', () => {
     const EmittingEntryRow = {
       props: ['draft', 'rowErrors'],
       emits: ['update:draft', 'duplicate', 'remove'],
-      template: `<tr><td><button data-test="duplicate-btn" @click="$emit('duplicate')">Dup</button></td></tr>`,
+      template: `<div><button data-test="duplicate-btn" @click="$emit('duplicate')">Dup</button></div>`,
     }
 
     const wrapper = mount(NewEntriesTab, {
@@ -293,7 +293,7 @@ describe('NewEntriesTab', () => {
     const EmittingEntryRow = {
       props: ['draft', 'rowErrors'],
       emits: ['update:draft', 'duplicate', 'remove'],
-      template: `<tr><td><button :data-test="'remove-btn-' + draft._id" @click="$emit('remove')">Rem</button></td></tr>`,
+      template: `<div><button :data-test="'remove-btn-' + draft._id" @click="$emit('remove')">Rem</button></div>`,
     }
 
     const wrapper = mount(NewEntriesTab, {

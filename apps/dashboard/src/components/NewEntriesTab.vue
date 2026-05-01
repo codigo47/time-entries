@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { AlertCircle } from 'lucide-vue-next'
 import { useDraftEntriesStore } from '@/stores/draftEntries'
 import { useLookupsStore } from '@/stores/lookups'
 import { useCompanyContextStore } from '@/stores/companyContext'
@@ -16,6 +17,10 @@ const ctx = useCompanyContextStore()
 
 const errorsByRow = ref<Record<number, Record<string, string[]>>>({})
 const banner = ref<string | null>(null)
+
+const totalErrors = computed(() =>
+  Object.values(errorsByRow.value).reduce((sum, e) => sum + Object.keys(e).length, 0),
+)
 
 onMounted(async () => {
   await lookups.loadCompanies()
@@ -95,46 +100,43 @@ defineExpose({ submit, localValidate, errorsByRow, banner })
   <div class="space-y-4">
     <AiAssistInput />
 
-    <!-- Banner -->
+    <!-- Validation summary alert -->
     <div
-      v-if="banner"
+      v-if="banner && totalErrors > 0"
+      role="alert"
+      data-test="banner"
+      class="rounded-md border border-destructive/50 bg-destructive/5 p-3 text-sm text-destructive flex gap-2 items-start"
+    >
+      <AlertCircle class="size-4 mt-0.5 shrink-0" />
+      <span>{{ banner }}</span>
+    </div>
+
+    <!-- Success / info banner (no errors) -->
+    <div
+      v-else-if="banner"
       data-test="banner"
       class="text-sm text-muted-foreground"
     >
       {{ banner }}
     </div>
 
-    <!-- Entries card -->
-    <div class="rounded-lg border border-border bg-card">
-      <table class="w-full" style="border-collapse: collapse;">
-        <thead>
-          <tr class="border-b border-border">
-            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Company</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Date</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Employee</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Project</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Task</th>
-            <th class="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Hours</th>
-            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Notes</th>
-            <th class="w-12" />
-          </tr>
-        </thead>
-        <tbody>
-          <EntryRow
-            v-for="(row, i) in drafts.rows" :key="row._id"
-            :draft="row" :row-errors="errorsByRow[i] ?? {}"
-            :seq="i + 1"
-            @update:draft="(v) => (drafts.rows[i] = v)"
-            @duplicate="drafts.duplicate(i)"
-            @remove="drafts.remove(i)"
-          />
-        </tbody>
-      </table>
+    <!-- Entry cards stack -->
+    <div class="space-y-3">
+      <EntryRow
+        v-for="(row, i) in drafts.rows"
+        :key="row._id"
+        :draft="row"
+        :row-errors="errorsByRow[i] ?? {}"
+        :seq="i + 1"
+        @update:draft="(v) => (drafts.rows[i] = v)"
+        @duplicate="drafts.duplicate(i)"
+        @remove="drafts.remove(i)"
+      />
+    </div>
 
-      <!-- Footer inside the card -->
-      <div class="border-t border-border px-4 py-3">
-        <EntryFooter @add-row="drafts.addRow()" @submit="submit" />
-      </div>
+    <!-- Footer -->
+    <div class="border border-border rounded-lg px-4 py-3 bg-card">
+      <EntryFooter @add-row="drafts.addRow()" @submit="submit" />
     </div>
   </div>
 </template>
