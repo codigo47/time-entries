@@ -27,14 +27,14 @@ describe('history store', () => {
     expect(store.items).toEqual([])
     expect(store.meta.current_page).toBe(1)
     expect(store.meta.last_page).toBe(1)
-    expect(store.meta.per_page).toBe(25)
+    expect(store.meta.per_page).toBe(10)
     expect(store.meta.total).toBe(0)
     expect(store.summary).toEqual([])
   })
 
   it('has default filters', () => {
     const store = useHistoryStore()
-    expect(store.filters.per_page).toBe(25)
+    expect(store.filters.per_page).toBe(10)
     expect(store.filters.sort).toBe('-date')
   })
 

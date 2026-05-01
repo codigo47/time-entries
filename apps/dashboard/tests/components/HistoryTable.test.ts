@@ -346,4 +346,44 @@ describe('HistoryTable', () => {
 
     expect(mockPatch).toHaveBeenCalledWith('/time-entries/te-1', expect.objectContaining({ notes: null }))
   })
+
+  it('per-page select is rendered with current per_page value', () => {
+    const history = useHistoryStore()
+    history.items = []
+    history.meta = { current_page: 1, last_page: 1, per_page: 10, total: 0 }
+    history.filters.per_page = 10
+    const wrapper = mount(HistoryTable)
+    const select = wrapper.find('[data-test="per-page-select"]')
+    expect(select.exists()).toBe(true)
+    expect((select.element as HTMLSelectElement).value).toBe('10')
+  })
+
+  it('changing per-page select updates store filter and triggers load', async () => {
+    mockLoadResponse()
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 2, per_page: 10, total: 30 }
+    history.filters.per_page = 10
+    const wrapper = mount(HistoryTable)
+
+    const select = wrapper.find('[data-test="per-page-select"]')
+    await select.setValue('25')
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.per_page).toBe(25)
+    expect(history.filters.page).toBe(1)
+    expect(mockGet).toHaveBeenCalledWith('/time-entries', expect.objectContaining({
+      params: expect.objectContaining({ per_page: 25 }),
+    }))
+  })
+
+  it('per-page select has options 10, 25, 50, 100', () => {
+    const history = useHistoryStore()
+    history.items = []
+    history.meta = { current_page: 1, last_page: 1, per_page: 10, total: 0 }
+    const wrapper = mount(HistoryTable)
+    const options = wrapper.findAll('[data-test="per-page-select"] option')
+    const values = options.map((o) => (o.element as HTMLOptionElement).value)
+    expect(values).toEqual(['10', '25', '50', '100'])
+  })
 })

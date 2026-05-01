@@ -74,6 +74,12 @@ function setPage(page: number) {
   history.load()
 }
 
+function setPerPage(value: number) {
+  history.filters.per_page = value
+  history.filters.page = 1
+  history.load()
+}
+
 defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
 </script>
 
@@ -275,6 +281,21 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
       >
         <ChevronRight class="size-4" />
       </button>
+      <div class="flex items-center gap-1.5 ml-auto">
+        <label class="text-sm text-muted-foreground" for="per-page-select">Per page:</label>
+        <select
+          id="per-page-select"
+          data-test="per-page-select"
+          :value="history.filters.per_page"
+          class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
+          @change="setPerPage(Number(($event.target as HTMLSelectElement).value))"
+        >
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
     </div>
   </div>
 </template>
