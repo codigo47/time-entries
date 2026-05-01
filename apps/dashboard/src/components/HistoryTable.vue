@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { Pencil, Trash2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
+import { Pencil, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/history'
 import { api } from '@/services/api'
 import type { TimeEntryDto } from '@shared/types'
@@ -11,7 +11,6 @@ const history = useHistoryStore()
 const editItem = ref<TimeEntryDto | null>(null)
 const editHours = ref<number>(0)
 const editNotes = ref<string>('')
-const deleteId = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 
 function startEdit(item: TimeEntryDto) {
@@ -36,26 +35,6 @@ async function saveEdit() {
     await history.load()
   } catch {
     actionError.value = 'Failed to save changes.'
-  }
-}
-
-function confirmDelete(id: string) {
-  deleteId.value = id
-  actionError.value = null
-}
-
-function cancelDelete() {
-  deleteId.value = null
-}
-
-async function doDelete() {
-  if (!deleteId.value) return
-  try {
-    await api.delete(`/time-entries/${deleteId.value}`)
-    deleteId.value = null
-    await history.load()
-  } catch {
-    actionError.value = 'Failed to delete entry.'
   }
 }
 
@@ -91,7 +70,7 @@ function sortIcon(field: string) {
 const dateSortState = computed(() => sortIcon('date'))
 const hoursSortState = computed(() => sortIcon('hours'))
 
-defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
+defineExpose({ saveEdit, editItem, actionError })
 </script>
 
 <template>
@@ -148,39 +127,6 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
             @click="saveEdit"
           >
             Save
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Delete confirm dialog -->
-    <div
-      v-if="deleteId"
-      class="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
-      data-test="delete-dialog"
-    >
-      <div class="bg-white rounded-lg border border-border p-6 w-72 space-y-3 shadow-lg">
-        <h3 class="font-semibold text-foreground">
-          Delete Entry?
-        </h3>
-        <p class="text-sm text-muted-foreground">
-          This cannot be undone.
-        </p>
-        <div class="flex gap-2 justify-end">
-          <button
-            data-test="delete-cancel"
-            class="text-sm px-3 py-1.5 rounded border border-border hover:bg-muted transition-colors cursor-pointer bg-transparent"
-            @click="cancelDelete"
-          >
-            Cancel
-          </button>
-          <button
-            data-test="delete-confirm"
-            class="text-sm px-3 py-1.5 rounded bg-destructive text-destructive-foreground border-none hover:opacity-90 transition-opacity cursor-pointer flex items-center gap-1.5"
-            @click="doDelete"
-          >
-            <Trash2 class="size-4" />
-            Delete
           </button>
         </div>
       </div>
@@ -259,16 +205,6 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
           >
             <Pencil class="size-4" />
             Edit
-          </button>
-          <button
-            data-test="delete-btn"
-            aria-label="Delete entry"
-            title="Delete entry"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
-            @click="confirmDelete(item.id)"
-          >
-            <Trash2 class="size-4" />
-            Delete
           </button>
         </div>
       </div>

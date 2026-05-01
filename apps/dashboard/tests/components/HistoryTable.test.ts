@@ -19,7 +19,6 @@ import type { TimeEntryDto } from '@shared/types'
 
 const mockGet = vi.mocked(api.get)
 const mockPatch = vi.mocked(api.patch)
-const mockDelete = vi.mocked(api.delete)
 
 const sampleItem: TimeEntryDto = {
   id: 'te-1',
@@ -133,57 +132,6 @@ describe('HistoryTable', () => {
     await new Promise((r) => setTimeout(r, 20))
 
     expect(wrapper.find('[data-test="action-error"]').text()).toContain('Failed to save changes.')
-  })
-
-  it('opens delete confirm dialog', async () => {
-    const history = useHistoryStore()
-    history.items = [sampleItem]
-    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
-    const wrapper = mount(HistoryTable)
-
-    expect(wrapper.find('[data-test="delete-dialog"]').exists()).toBe(false)
-    await wrapper.find('[data-test="delete-btn"]').trigger('click')
-    expect(wrapper.find('[data-test="delete-dialog"]').exists()).toBe(true)
-  })
-
-  it('cancels delete dialog', async () => {
-    const history = useHistoryStore()
-    history.items = [sampleItem]
-    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
-    const wrapper = mount(HistoryTable)
-
-    await wrapper.find('[data-test="delete-btn"]').trigger('click')
-    await wrapper.find('[data-test="delete-cancel"]').trigger('click')
-    expect(wrapper.find('[data-test="delete-dialog"]').exists()).toBe(false)
-  })
-
-  it('calls DELETE on confirm delete', async () => {
-    mockDelete.mockResolvedValueOnce({} as never)
-    mockLoadResponse([])
-    const history = useHistoryStore()
-    history.items = [sampleItem]
-    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
-    const wrapper = mount(HistoryTable)
-
-    await wrapper.find('[data-test="delete-btn"]').trigger('click')
-    await wrapper.find('[data-test="delete-confirm"]').trigger('click')
-    await new Promise((r) => setTimeout(r, 20))
-
-    expect(mockDelete).toHaveBeenCalledWith('/time-entries/te-1')
-  })
-
-  it('shows error when DELETE fails', async () => {
-    mockDelete.mockRejectedValueOnce(new Error('Network error'))
-    const history = useHistoryStore()
-    history.items = [sampleItem]
-    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
-    const wrapper = mount(HistoryTable)
-
-    await wrapper.find('[data-test="delete-btn"]').trigger('click')
-    await wrapper.find('[data-test="delete-confirm"]').trigger('click')
-    await new Promise((r) => setTimeout(r, 20))
-
-    expect(wrapper.find('[data-test="action-error"]').text()).toContain('Failed to delete entry.')
   })
 
   it('startEdit uses empty string when notes is null', async () => {
@@ -325,21 +273,6 @@ describe('HistoryTable', () => {
     expect(vm.editItem).toBeNull()
     await vm.saveEdit()
     expect(mockPatch).not.toHaveBeenCalled()
-  })
-
-  it('doDelete guard: returns early when deleteId is null', async () => {
-    const history = useHistoryStore()
-    history.items = []
-    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 0 }
-    const wrapper = mount(HistoryTable)
-
-    const vm = wrapper.vm as unknown as {
-      doDelete: () => Promise<void>
-      deleteId: null
-    }
-    expect(vm.deleteId).toBeNull()
-    await vm.doDelete()
-    expect(mockDelete).not.toHaveBeenCalled()
   })
 
   it('notes field is set to null when editNotes is empty on save', async () => {
