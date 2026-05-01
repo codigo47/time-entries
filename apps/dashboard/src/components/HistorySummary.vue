@@ -37,19 +37,30 @@ watch(groupBy, (v) => {
         </option>
       </select>
     </div>
-    <div v-if="history.summary.length > 0" class="space-y-2">
-      <div
-        v-for="row in history.summary"
-        :key="row.group_key"
-        data-test="summary-row"
-        class="flex items-center rounded-lg border border-border bg-card px-4 py-2 text-sm"
-      >
-        <span class="flex-1 font-medium text-foreground">{{ groupBy === 'date' ? formatDateMDY(row.group_label ?? row.group_key) : (row.group_label ?? row.group_key) }}</span>
-        <span class="w-20 text-right font-medium text-foreground">{{ Number(row.total_hours).toFixed(2) }} h</span>
-        <span class="w-20 text-right text-muted-foreground">{{ row.entry_count }} entries</span>
-      </div>
+    <div v-if="history.summary.length > 0" class="border border-border rounded-lg overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-muted">
+          <tr>
+            <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Group</th>
+            <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Total Hours</th>
+            <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Entries</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="row in history.summary"
+            :key="row.group_key"
+            data-test="summary-row"
+            class="hover:bg-muted/40 transition-colors"
+          >
+            <td class="px-3 py-2 border-b border-border">{{ groupBy === 'date' ? formatDateMDY(row.group_label ?? row.group_key) : (row.group_label ?? row.group_key) }}</td>
+            <td class="px-3 py-2 text-right font-medium border-b border-border">{{ Number(row.total_hours).toFixed(2) }} h</td>
+            <td class="px-3 py-2 text-right text-muted-foreground border-b border-border">{{ row.entry_count }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <p v-else class="text-sm text-gray-500" data-test="summary-empty">
+    <p v-else class="text-sm text-muted-foreground" data-test="summary-empty">
       No summary data.
     </p>
   </div>

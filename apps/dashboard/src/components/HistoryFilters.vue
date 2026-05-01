@@ -173,7 +173,7 @@ function clearAll() {
     </div>
 
     <div class="flex flex-col gap-1 flex-1 min-w-[280px]">
-      <label class="text-xs font-medium text-muted-foreground">Search</label>
+      <label class="text-xs font-medium text-muted-foreground">Search (press Enter to search)</label>
       <div class="relative">
         <Search class="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
         <input
