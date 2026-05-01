@@ -41,24 +41,7 @@ class CreateTimeEntries
         foreach ($rows as $i => $row) {
             $key = $row['employee_id'].'|'.$row['date'];
             if (isset($byEmpDate[$key]) && $byEmpDate[$key]['project_id'] !== $row['project_id']) {
-                $conflictIdx = $byEmpDate[$key]['idx'];
-                $rowNum = $i + 1;
-                $conflictRowNum = $conflictIdx + 1;
-
-                // Try to resolve names for descriptive message
-                /** @var Employee|null $empForMsg */
-                $empForMsg = Employee::find($row['employee_id']);
-                /** @var Project|null $projA */
-                $projA = Project::find($byEmpDate[$key]['project_id']);
-                /** @var Project|null $projB */
-                $projB = Project::find($row['project_id']);
-
-                $employeeName = $empForMsg instanceof Employee ? $empForMsg->name : $row['employee_id'];
-                $projectAName = $projA instanceof Project ? $projA->name : $byEmpDate[$key]['project_id'];
-                $projectBName = $projB instanceof Project ? $projB->name : $row['project_id'];
-
-                $errors["entries.$i.project_id"][] = "Conflict with row {$conflictRowNum}: {$employeeName} can only work on one project per day, "
-                    ."but rows {$conflictRowNum} and {$rowNum} specify different projects ('{$projectAName}' vs '{$projectBName}') on {$row['date']}.";
+                $errors["entries.$i.project_id"][] = 'An employee can only be assigned to one project per date.';
             } else {
                 $byEmpDate[$key] = array_merge($row, ['idx' => $i]);
             }
@@ -121,11 +104,7 @@ class CreateTimeEntries
 
                 // Different project: one project per day rule
                 if ($existing->project_id !== $row['project_id']) {
-                    /** @var Project|null $existingProject */
-                    $existingProject = Project::find($existing->project_id);
-                    $existingProjectName = $existingProject instanceof Project ? $existingProject->name : $existing->project_id;
-                    $errors["entries.$i.project_id"][] = "{$employeeName} already has time entries for project '{$existingProjectName}' on {$row['date']}. "
-                        .'An employee can only work on one project per day (but multiple tasks within that project).';
+                    $errors["entries.$i.project_id"][] = 'An employee can only be assigned to one project per date.';
                     break;
                 }
             }
