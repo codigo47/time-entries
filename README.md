@@ -72,6 +72,7 @@ Used by Vite.
 ### 6. Install frontend dependencies
 
 ```bash
+cd apps/dashboard
 npm install
 ```
 
