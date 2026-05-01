@@ -92,6 +92,44 @@ describe('NewEntriesTab', () => {
     expect(drafts.rows[0]?.company_id).toBe('c1')
   })
 
+  it('global ctx change to a specific company propagates to every draft row and clears dependents', async () => {
+    const drafts = useDraftEntriesStore()
+    const ctx = useCompanyContextStore()
+    drafts.addRow({ _id: 'r1', company_id: 'old-c', employee_id: 'e-old', project_id: 'p-old', task_id: 't-old' })
+    drafts.addRow({ _id: 'r2', company_id: undefined, employee_id: 'e-old2', project_id: 'p-old2', task_id: 't-old2' })
+
+    mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+
+    ctx.companyId = 'c-new'
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(drafts.rows[0].company_id).toBe('c-new')
+    expect(drafts.rows[0].employee_id).toBeUndefined()
+    expect(drafts.rows[0].project_id).toBeUndefined()
+    expect(drafts.rows[0].task_id).toBeUndefined()
+    expect(drafts.rows[1].company_id).toBe('c-new')
+    expect(drafts.rows[1].employee_id).toBeUndefined()
+  })
+
+  it('global ctx change to "all" leaves draft rows untouched', async () => {
+    const drafts = useDraftEntriesStore()
+    const ctx = useCompanyContextStore()
+    ctx.companyId = 'c1'
+    drafts.addRow({ _id: 'r1', company_id: 'c1', employee_id: 'e1', project_id: 'p1', task_id: 't1' })
+
+    mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+
+    ctx.companyId = 'all'
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(drafts.rows[0].company_id).toBe('c1')
+    expect(drafts.rows[0].employee_id).toBe('e1')
+    expect(drafts.rows[0].project_id).toBe('p1')
+    expect(drafts.rows[0].task_id).toBe('t1')
+  })
+
   it('seeds company_id from ctx when add-row is clicked', async () => {
     const ctx = useCompanyContextStore()
     ctx.companyId = 'c1'
