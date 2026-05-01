@@ -342,6 +342,38 @@ describe('HistoryFilters', () => {
     expect(options.length).toBe(1)
   })
 
+  it('renders search input', () => {
+    const wrapper = mount(HistoryFilters)
+    expect(wrapper.find('[data-test="filter-search"]').exists()).toBe(true)
+  })
+
+  it('updates q filter and calls load when search changes (debounced)', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    const wrapper = mount(HistoryFilters)
+
+    const input = wrapper.find('[data-test="filter-search"]')
+    await input.setValue('Athena')
+    await new Promise((r) => setTimeout(r, 350))
+
+    expect(history.filters.q).toBe('Athena')
+    expect(mockGet).toHaveBeenCalled()
+  })
+
+  it('clears q filter when search is emptied', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    history.filters.q = 'Athena'
+    const wrapper = mount(HistoryFilters)
+
+    const input = wrapper.find('[data-test="filter-search"]')
+    await input.setValue('')
+    await new Promise((r) => setTimeout(r, 350))
+
+    expect(history.filters.q).toBeUndefined()
+    expect(mockGet).toHaveBeenCalled()
+  })
+
   it('clears project filter when empty value selected', async () => {
     mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
     const history = useHistoryStore()

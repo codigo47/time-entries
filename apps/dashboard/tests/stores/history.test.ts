@@ -121,6 +121,16 @@ describe('history store', () => {
     expect(args[1]).toEqual({ params: {} })
   })
 
+  it('load wraps q as filter[q]', async () => {
+    const store = useHistoryStore()
+    store.filters.q = 'Athena'
+    mockGet.mockResolvedValueOnce({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } } } as never)
+    await store.load()
+    expect(mockGet).toHaveBeenCalledWith('/time-entries', {
+      params: expect.objectContaining({ 'filter[q]': 'Athena' }),
+    })
+  })
+
   it('loadSummary merges current filters into the request params', async () => {
     const store = useHistoryStore()
     store.filters.company_id = 'c1'

@@ -13,6 +13,7 @@ interface Filters {
   per_page?: number
   page?: number
   sort?: string
+  q?: string
 }
 
 export const useHistoryStore = defineStore('history', () => {
@@ -33,6 +34,7 @@ export const useHistoryStore = defineStore('history', () => {
     if (f.task_id) params['filter[task_id]'] = f.task_id
     if (f.date_from) params['filter[date_from]'] = f.date_from
     if (f.date_to) params['filter[date_to]'] = f.date_to
+    if (f.q) params['filter[q]'] = f.q
     return params
   }
 

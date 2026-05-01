@@ -36,7 +36,16 @@ class TimeEntryController extends Controller
                 AllowedFilter::exact('task_id'),
                 AllowedFilter::callback('date_from', fn ($q, $v) => $q->where('date', '>=', $v)),
                 AllowedFilter::callback('date_to', fn ($q, $v) => $q->where('date', '<=', $v)),
-                AllowedFilter::callback('q', fn ($q, $v) => $q->where('notes', 'ilike', '%'.$v.'%')),
+                AllowedFilter::callback('q', function ($builder, $v) {
+                    $like = '%'.$v.'%';
+                    $builder->where(function ($w) use ($like) {
+                        $w->where('notes', 'ilike', $like)
+                          ->orWhereHas('company', fn ($q) => $q->where('name', 'ilike', $like))
+                          ->orWhereHas('project', fn ($q) => $q->where('name', 'ilike', $like))
+                          ->orWhereHas('task', fn ($q) => $q->where('name', 'ilike', $like))
+                          ->orWhereHas('employee', fn ($q) => $q->where('name', 'ilike', $like));
+                    });
+                }),
             )
             ->allowedSorts('date', 'hours', 'created_at')
             ->defaultSort('-date')
@@ -109,6 +118,16 @@ class TimeEntryController extends Controller
                 AllowedFilter::exact('task_id'),
                 AllowedFilter::callback('date_from', fn ($q, $v) => $q->where('date', '>=', $v)),
                 AllowedFilter::callback('date_to', fn ($q, $v) => $q->where('date', '<=', $v)),
+                AllowedFilter::callback('q', function ($builder, $v) {
+                    $like = '%'.$v.'%';
+                    $builder->where(function ($w) use ($like) {
+                        $w->where('notes', 'ilike', $like)
+                          ->orWhereHas('company', fn ($q) => $q->where('name', 'ilike', $like))
+                          ->orWhereHas('project', fn ($q) => $q->where('name', 'ilike', $like))
+                          ->orWhereHas('task', fn ($q) => $q->where('name', 'ilike', $like))
+                          ->orWhereHas('employee', fn ($q) => $q->where('name', 'ilike', $like));
+                    });
+                }),
             )
             ->getEloquentBuilder()
             ->selectRaw("$col as group_key, SUM(hours) as total_hours, COUNT(*) as entry_count")

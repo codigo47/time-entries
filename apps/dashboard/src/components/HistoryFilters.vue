@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import { refDebounced } from '@vueuse/core'
+import { Search } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/history'
 import { useLookupsStore } from '@/stores/lookups'
 
@@ -41,6 +43,14 @@ onMounted(async () => {
   await loadForScope()
 })
 watch(() => history.filters.company_id, loadForScope)
+
+const searchInput = ref<string>(history.filters.q ?? '')
+const debouncedSearch = refDebounced(searchInput, 300)
+
+watch(debouncedSearch, (v) => {
+  history.filters.q = v.trim() || undefined
+  onFilter()
+})
 
 function onFilter() {
   history.filters.page = 1
@@ -137,6 +147,20 @@ function onCompanyChange(value: string) {
         <option value="">All tasks</option>
         <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
       </select>
+    </div>
+
+    <div class="flex flex-col gap-1 flex-1 min-w-[280px]">
+      <label class="text-xs font-medium text-muted-foreground">Search</label>
+      <div class="relative">
+        <Search class="absolute left-2 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+        <input
+          v-model="searchInput"
+          data-test="filter-search"
+          type="text"
+          placeholder="Search company, project, employee, task, notes..."
+          class="w-full rounded-md border border-border bg-background pl-8 pr-2 py-1 text-sm text-foreground outline-none focus:border-ring"
+        />
+      </div>
     </div>
   </div>
 </template>

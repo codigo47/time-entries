@@ -152,6 +152,52 @@ it('GET /time-entries/summary returns human-readable group_label for company', f
     expect($row['group_label'])->toBe($this->company->name);
 });
 
+it('GET /time-entries supports search across notes, company, project, employee, task names', function () {
+    $cA = \App\Models\Company::factory()->create(['name' => 'Acme Industries']);
+    $cB = \App\Models\Company::factory()->create(['name' => 'Globex Corp']);
+    $eA = \App\Models\Employee::factory()->create(['name' => 'Athena Pallas']);
+    $eA->companies()->attach([$cA->id, $cB->id]);
+    $pA = \App\Models\Project::factory()->for($cA)->create(['name' => 'Olympus']);
+    $pB = \App\Models\Project::factory()->for($cB)->create(['name' => 'Pyramid']);
+    $eA->projects()->attach([$pA->id, $pB->id]);
+    $tA = \App\Models\Task::factory()->for($cA)->create(['name' => 'Cleanup']);
+    $tB = \App\Models\Task::factory()->for($cB)->create(['name' => 'Refactor']);
+
+    \App\Models\TimeEntry::factory()->create([
+        'company_id' => $cA->id, 'employee_id' => $eA->id, 'project_id' => $pA->id, 'task_id' => $tA->id,
+        'date' => '2026-04-01', 'hours' => 4, 'notes' => 'Migration prep work',
+    ]);
+    \App\Models\TimeEntry::factory()->create([
+        'company_id' => $cB->id, 'employee_id' => $eA->id, 'project_id' => $pB->id, 'task_id' => $tB->id,
+        'date' => '2026-04-02', 'hours' => 4, 'notes' => null,
+    ]);
+
+    // Search by company name
+    $r1 = $this->getJson('/api/v1/time-entries?filter[q]=Acme');
+    $r1->assertOk();
+    expect($r1->json('data'))->toHaveCount(1);
+
+    // Search by project name
+    $r2 = $this->getJson('/api/v1/time-entries?filter[q]=Pyramid');
+    expect($r2->json('data'))->toHaveCount(1);
+
+    // Search by task name
+    $r3 = $this->getJson('/api/v1/time-entries?filter[q]=Refactor');
+    expect($r3->json('data'))->toHaveCount(1);
+
+    // Search by employee name
+    $r4 = $this->getJson('/api/v1/time-entries?filter[q]=Athena');
+    expect($r4->json('data'))->toHaveCount(2);
+
+    // Search by notes
+    $r5 = $this->getJson('/api/v1/time-entries?filter[q]=Migration');
+    expect($r5->json('data'))->toHaveCount(1);
+
+    // No matches
+    $r6 = $this->getJson('/api/v1/time-entries?filter[q]=Nonexistent');
+    expect($r6->json('data'))->toHaveCount(0);
+});
+
 it('POST /time-entries/parse returns empty rows when no AI key', function () {
     config(['openai.api_key' => null]);
     $response = $this->postJson('/api/v1/time-entries/parse', ['text' => 'Athena did stuff']);
