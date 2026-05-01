@@ -180,33 +180,31 @@ defineExpose({ saveEdit, editItem, actionError })
         data-test-card="history-card"
         class="rounded-lg border border-border bg-card px-4 py-3"
       >
-        <!-- Line 1: compact inline fields -->
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground">
-          <span class="font-medium">{{ formatDateMDY(item.date) }}</span>
-          <span class="text-muted-foreground">·</span>
-          <span>{{ item.employee?.name ?? item.employee_id }}</span>
-          <span class="text-muted-foreground">·</span>
-          <span>{{ item.project?.name ?? item.project_id }}</span>
-          <span class="text-muted-foreground">·</span>
-          <span>{{ item.task?.name ?? item.task_id }}</span>
-          <span class="text-muted-foreground">·</span>
-          <span class="font-medium">{{ item.hours }} h</span>
-        </div>
-        <!-- Line 2: notes (only if present) -->
-        <p v-if="item.notes" class="text-xs italic text-muted-foreground mt-1">{{ item.notes }}</p>
-        <!-- Line 3: Action row — centered -->
-        <div class="flex justify-center gap-3 mt-3">
+        <!-- Line 1: compact inline fields with right-aligned edit icon -->
+        <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground flex-1 min-w-0">
+            <span class="font-medium">{{ formatDateMDY(item.date) }}</span>
+            <span class="text-muted-foreground">·</span>
+            <span>{{ item.employee?.name ?? item.employee_id }}</span>
+            <span class="text-muted-foreground">·</span>
+            <span>{{ item.project?.name ?? item.project_id }}</span>
+            <span class="text-muted-foreground">·</span>
+            <span>{{ item.task?.name ?? item.task_id }}</span>
+            <span class="text-muted-foreground">·</span>
+            <span class="font-medium">{{ item.hours }} h</span>
+          </div>
           <button
             data-test="edit-btn"
             aria-label="Edit entry"
             title="Edit entry"
-            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+            class="inline-flex items-center justify-center size-9 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity shrink-0"
             @click="startEdit(item)"
           >
             <Pencil class="size-4" />
-            Edit
           </button>
         </div>
+        <!-- Line 2: notes (only if present) -->
+        <p v-if="item.notes" class="text-xs italic text-muted-foreground mt-1">{{ item.notes }}</p>
       </div>
     </div>
 
