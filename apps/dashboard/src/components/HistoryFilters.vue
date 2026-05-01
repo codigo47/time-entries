@@ -18,17 +18,29 @@ const projects = computed(() => {
   return lookups.allProjects
 })
 
-async function ensureAllLoaded() {
-  if (!history.filters.company_id) {
+const tasks = computed(() => {
+  const id = history.filters.company_id
+  return id ? (lookups.tasksByCompany[id] ?? []) : []
+})
+
+async function loadForScope() {
+  const id = history.filters.company_id
+  if (id) {
+    await Promise.all([
+      lookups.loadEmployees(id),
+      lookups.loadProjects(id),
+      lookups.loadTasks(id),
+    ])
+  } else {
     await Promise.all([lookups.loadAllEmployees(), lookups.loadAllProjects()])
   }
 }
 
 onMounted(async () => {
   await lookups.loadCompanies()
-  await ensureAllLoaded()
+  await loadForScope()
 })
-watch(() => history.filters.company_id, ensureAllLoaded)
+watch(() => history.filters.company_id, loadForScope)
 
 function onFilter() {
   history.filters.page = 1
@@ -40,6 +52,7 @@ function onCompanyChange(value: string) {
   // clear dependent filters when company changes
   history.filters.employee_id = undefined
   history.filters.project_id = undefined
+  history.filters.task_id = undefined
   onFilter()
 }
 </script>
@@ -49,45 +62,6 @@ function onCompanyChange(value: string) {
     class="flex flex-wrap items-end gap-4"
     data-test="history-filters"
   >
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Company</label>
-      <select
-        data-test="filter-company"
-        :value="history.filters.company_id ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
-        @change="onCompanyChange(($event.target as HTMLSelectElement).value)"
-      >
-        <option value="">All companies</option>
-        <option v-for="c in lookups.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
-      </select>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Employee</label>
-      <select
-        data-test="filter-employee"
-        :value="history.filters.employee_id ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
-        @change="history.filters.employee_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
-      >
-        <option value="">All employees</option>
-        <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
-      </select>
-    </div>
-
-    <div class="flex flex-col gap-1">
-      <label class="text-xs font-medium text-muted-foreground">Project</label>
-      <select
-        data-test="filter-project"
-        :value="history.filters.project_id ?? ''"
-        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
-        @change="history.filters.project_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
-      >
-        <option value="">All projects</option>
-        <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
-      </select>
-    </div>
-
     <div class="flex flex-col gap-1">
       <label class="text-xs font-medium text-muted-foreground">From</label>
       <input
@@ -110,6 +84,59 @@ function onCompanyChange(value: string) {
         placeholder="date"
         @change="history.filters.date_to = ($event.target as HTMLInputElement).value || undefined; onFilter()"
       />
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-foreground">Company</label>
+      <select
+        data-test="filter-company"
+        :value="history.filters.company_id ?? ''"
+        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
+        @change="onCompanyChange(($event.target as HTMLSelectElement).value)"
+      >
+        <option value="">All companies</option>
+        <option v-for="c in lookups.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-foreground">Project</label>
+      <select
+        data-test="filter-project"
+        :value="history.filters.project_id ?? ''"
+        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
+        @change="history.filters.project_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
+      >
+        <option value="">All projects</option>
+        <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-foreground">Employee</label>
+      <select
+        data-test="filter-employee"
+        :value="history.filters.employee_id ?? ''"
+        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer"
+        @change="history.filters.employee_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
+      >
+        <option value="">All employees</option>
+        <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
+      </select>
+    </div>
+
+    <div class="flex flex-col gap-1">
+      <label class="text-xs font-medium text-muted-foreground">Task</label>
+      <select
+        data-test="filter-task"
+        :value="history.filters.task_id ?? ''"
+        :disabled="!history.filters.company_id"
+        class="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground outline-none focus:border-ring cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        @change="history.filters.task_id = ($event.target as HTMLSelectElement).value || undefined; onFilter()"
+      >
+        <option value="">All tasks</option>
+        <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
+      </select>
     </div>
   </div>
 </template>

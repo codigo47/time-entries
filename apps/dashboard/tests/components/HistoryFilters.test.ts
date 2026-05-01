@@ -41,12 +41,13 @@ describe('HistoryFilters', () => {
     expect(wrapper.find('[data-test="filter-company"]').text()).toContain('Acme')
   })
 
-  it('updates company_id filter and clears employee/project filters on change', async () => {
+  it('updates company_id filter and clears employee/project/task filters on change', async () => {
     mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
     const history = useHistoryStore()
     const lookups = useLookupsStore()
     history.filters.employee_id = 'e1'
     history.filters.project_id = 'p1'
+    history.filters.task_id = 't1'
     lookups.companies = [{ id: 'c1', name: 'Acme' }]
     const wrapper = mount(HistoryFilters)
 
@@ -58,7 +59,60 @@ describe('HistoryFilters', () => {
     expect(history.filters.company_id).toBe('c1')
     expect(history.filters.employee_id).toBeUndefined()
     expect(history.filters.project_id).toBeUndefined()
+    expect(history.filters.task_id).toBeUndefined()
     expect(mockGet).toHaveBeenCalled()
+  })
+
+  it('renders task filter disabled when no company is selected', () => {
+    const wrapper = mount(HistoryFilters)
+    const taskSelect = wrapper.find('[data-test="filter-task"]').element as HTMLSelectElement
+    expect(taskSelect).toBeDefined()
+    expect(taskSelect.disabled).toBe(true)
+  })
+
+  it('renders task filter enabled with options when company is selected', () => {
+    const history = useHistoryStore()
+    const lookups = useLookupsStore()
+    history.filters.company_id = 'c1'
+    lookups.tasksByCompany = { c1: [{ id: 't1', company_id: 'c1', name: 'Development' }] }
+    const wrapper = mount(HistoryFilters)
+    const taskSelect = wrapper.find('[data-test="filter-task"]').element as HTMLSelectElement
+    expect(taskSelect.disabled).toBe(false)
+    expect(wrapper.find('[data-test="filter-task"]').text()).toContain('Development')
+  })
+
+  it('updates task_id filter and calls load on change', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    const lookups = useLookupsStore()
+    history.filters.company_id = 'c1'
+    lookups.tasksByCompany = { c1: [{ id: 't1', company_id: 'c1', name: 'Dev' }] }
+    const wrapper = mount(HistoryFilters)
+
+    const select = wrapper.find('[data-test="filter-task"]')
+    await select.setValue('t1')
+    await select.trigger('change')
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.task_id).toBe('t1')
+    expect(mockGet).toHaveBeenCalled()
+  })
+
+  it('clears task_id when empty value selected', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    const lookups = useLookupsStore()
+    history.filters.company_id = 'c1'
+    history.filters.task_id = 't1'
+    lookups.tasksByCompany = { c1: [{ id: 't1', company_id: 'c1', name: 'Dev' }] }
+    const wrapper = mount(HistoryFilters)
+
+    const select = wrapper.find('[data-test="filter-task"]')
+    ;(select.element as HTMLSelectElement).value = ''
+    await select.trigger('change')
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.task_id).toBeUndefined()
   })
 
   it('clears company_id filter when empty value selected', async () => {
