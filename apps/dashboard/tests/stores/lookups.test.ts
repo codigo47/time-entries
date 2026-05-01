@@ -113,6 +113,17 @@ describe('lookups store', () => {
     expect(mockGet).toHaveBeenCalledTimes(1)
   })
 
+  it('loadAllEmployees retries after a failure (resets loaded flag)', async () => {
+    const store = useLookupsStore()
+    mockGet.mockRejectedValueOnce(new Error('Network down'))
+    await store.loadAllEmployees()
+    expect(store.allEmployees).toEqual([])
+
+    mockGet.mockResolvedValueOnce({ data: { data: [{ id: 'e1', name: 'Alice', email: 'a@b.com' }] } } as never)
+    await store.loadAllEmployees()
+    expect(store.allEmployees).toEqual([{ id: 'e1', name: 'Alice', email: 'a@b.com' }])
+  })
+
   it('loadAllProjects fetches all projects', async () => {
     const store = useLookupsStore()
     mockGet.mockResolvedValueOnce({ data: { data: [{ id: 'p1', company_id: 'c1', name: 'Alpha' }] } } as never)
@@ -127,6 +138,17 @@ describe('lookups store', () => {
     await store.loadAllProjects()
     await store.loadAllProjects()
     expect(mockGet).toHaveBeenCalledTimes(1)
+  })
+
+  it('loadAllProjects retries after a failure (resets loaded flag)', async () => {
+    const store = useLookupsStore()
+    mockGet.mockRejectedValueOnce(new Error('Network down'))
+    await store.loadAllProjects()
+    expect(store.allProjects).toEqual([])
+
+    mockGet.mockResolvedValueOnce({ data: { data: [{ id: 'p1', company_id: 'c1', name: 'Alpha' }] } } as never)
+    await store.loadAllProjects()
+    expect(store.allProjects).toEqual([{ id: 'p1', company_id: 'c1', name: 'Alpha' }])
   })
 
   it('loadEmployeesByProject fetches employees for a project', async () => {

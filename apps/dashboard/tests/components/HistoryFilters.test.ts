@@ -25,6 +25,43 @@ describe('HistoryFilters', () => {
     vi.clearAllMocks()
   })
 
+  it('does not render Clear filters link when no filters are active', () => {
+    const wrapper = mount(HistoryFilters)
+    expect(wrapper.find('[data-test="clear-filters"]').exists()).toBe(false)
+  })
+
+  it('renders Clear filters link when at least one filter is active', () => {
+    const history = useHistoryStore()
+    history.filters.company_id = 'c1'
+    const wrapper = mount(HistoryFilters)
+    expect(wrapper.find('[data-test="clear-filters"]').exists()).toBe(true)
+  })
+
+  it('clearAll resets every filter and triggers load', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    history.filters.company_id = 'c1'
+    history.filters.employee_id = 'e1'
+    history.filters.project_id = 'p1'
+    history.filters.task_id = 't1'
+    history.filters.date_from = '2026-01-01'
+    history.filters.date_to = '2026-12-31'
+    history.filters.q = 'foo'
+    const wrapper = mount(HistoryFilters)
+
+    await wrapper.find('[data-test="clear-filters"]').trigger('click')
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.company_id).toBeUndefined()
+    expect(history.filters.employee_id).toBeUndefined()
+    expect(history.filters.project_id).toBeUndefined()
+    expect(history.filters.task_id).toBeUndefined()
+    expect(history.filters.date_from).toBeUndefined()
+    expect(history.filters.date_to).toBeUndefined()
+    expect(history.filters.q).toBeUndefined()
+    expect(mockGet).toHaveBeenCalled()
+  })
+
   it('renders filter inputs', () => {
     const wrapper = mount(HistoryFilters)
     expect(wrapper.find('[data-test="filter-company"]').exists()).toBe(true)

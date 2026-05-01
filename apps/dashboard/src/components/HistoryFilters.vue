@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue'
 import { refDebounced } from '@vueuse/core'
-import { Search } from 'lucide-vue-next'
+import { Search, X } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/history'
 import { useLookupsStore } from '@/stores/lookups'
 
@@ -65,9 +65,32 @@ function onCompanyChange(value: string) {
   history.filters.task_id = undefined
   onFilter()
 }
+
+const hasActiveFilters = computed(() =>
+  !!(history.filters.company_id
+    || history.filters.employee_id
+    || history.filters.project_id
+    || history.filters.task_id
+    || history.filters.date_from
+    || history.filters.date_to
+    || history.filters.q),
+)
+
+function clearAll() {
+  history.filters.company_id = undefined
+  history.filters.employee_id = undefined
+  history.filters.project_id = undefined
+  history.filters.task_id = undefined
+  history.filters.date_from = undefined
+  history.filters.date_to = undefined
+  history.filters.q = undefined
+  searchInput.value = ''
+  onFilter()
+}
 </script>
 
 <template>
+  <div class="space-y-2" data-test="history-filters-wrapper">
   <div
     class="flex flex-wrap items-end gap-4"
     data-test="history-filters"
@@ -162,5 +185,18 @@ function onCompanyChange(value: string) {
         />
       </div>
     </div>
+  </div>
+
+  <div v-if="hasActiveFilters">
+    <button
+      type="button"
+      data-test="clear-filters"
+      class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline cursor-pointer bg-transparent border-none p-0"
+      @click="clearAll"
+    >
+      <X class="size-3" />
+      Clear filters
+    </button>
+  </div>
   </div>
 </template>
