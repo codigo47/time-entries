@@ -4,11 +4,9 @@ import { refDebounced } from '@vueuse/core'
 import { Search, X } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/history'
 import { useLookupsStore } from '@/stores/lookups'
-import { useCompanyContextStore } from '@/stores/companyContext'
 
 const history = useHistoryStore()
 const lookups = useLookupsStore()
-const ctx = useCompanyContextStore()
 
 const employees = computed(() => {
   const id = history.filters.company_id
@@ -45,19 +43,6 @@ onMounted(async () => {
   await loadForScope()
 })
 watch(() => history.filters.company_id, loadForScope)
-
-watch(() => ctx.companyId, (companyId) => {
-  if (companyId === 'all') {
-    history.filters.company_id = undefined
-  } else {
-    history.filters.company_id = companyId
-    history.filters.employee_id = undefined
-    history.filters.project_id = undefined
-    history.filters.task_id = undefined
-  }
-  loadForScope()
-  onFilter()
-})
 
 const searchInput = ref<string>(history.filters.q ?? '')
 const debouncedSearch = refDebounced(searchInput, 300)

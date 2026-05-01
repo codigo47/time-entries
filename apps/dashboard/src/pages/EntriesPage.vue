@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
+import { useCompanyContextStore } from '@/stores/companyContext'
+import { useHistoryStore } from '@/stores/history'
+import { useDraftEntriesStore } from '@/stores/draftEntries'
 import NewEntriesTab from '@/components/NewEntriesTab.vue'
 import HistoryTab from '@/components/HistoryTab.vue'
 import HistorySummary from '@/components/HistorySummary.vue'
@@ -10,6 +13,36 @@ import ShortcutsDialog from '@/components/ShortcutsDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
+
+const ctx = useCompanyContextStore()
+const history = useHistoryStore()
+const drafts = useDraftEntriesStore()
+
+// When the global company changes, sync both History and New Entries
+// even when their tabs are not currently mounted.
+watch(() => ctx.companyId, (id) => {
+  // History: update filter and reload
+  history.filters.company_id = id === 'all' ? undefined : id
+  history.filters.employee_id = undefined
+  history.filters.project_id = undefined
+  history.filters.task_id = undefined
+  history.filters.page = 1
+  history.load()
+
+  // New Entries: propagate to existing draft rows when picking a specific company.
+  // "All" leaves rows untouched (manual rows can't be "All").
+  if (id !== 'all') {
+    drafts.rows.forEach((row, i) => {
+      drafts.rows[i] = {
+        ...row,
+        company_id: id,
+        employee_id: undefined,
+        project_id: undefined,
+        task_id: undefined,
+      }
+    })
+  }
+})
 
 const showShortcuts = ref(false)
 

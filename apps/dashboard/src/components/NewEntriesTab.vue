@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { AlertCircle, CheckCircle2 } from 'lucide-vue-next'
 import { useDraftEntriesStore } from '@/stores/draftEntries'
 import { useLookupsStore } from '@/stores/lookups'
@@ -13,22 +13,6 @@ import EntryFooter from './EntryFooter.vue'
 const drafts = useDraftEntriesStore()
 const lookups = useLookupsStore()
 const ctx = useCompanyContextStore()
-
-// When the global company selector changes to a specific company,
-// propagate to every draft row as if the user had picked it manually:
-// set company_id and clear dependent fields. "All" leaves rows untouched.
-watch(() => ctx.companyId, (id) => {
-  if (id === 'all') return
-  drafts.rows.forEach((row, i) => {
-    drafts.rows[i] = {
-      ...row,
-      company_id: id,
-      employee_id: undefined,
-      project_id: undefined,
-      task_id: undefined,
-    }
-  })
-})
 
 const errorsByRow = ref<Record<number, Record<string, string[]>>>({})
 const banner = ref<string | null>(null)

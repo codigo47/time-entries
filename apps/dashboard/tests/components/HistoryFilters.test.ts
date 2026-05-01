@@ -15,7 +15,6 @@ vi.mock('@/services/api', () => ({
 import { api } from '@/services/api'
 import { useHistoryStore } from '@/stores/history'
 import { useLookupsStore } from '@/stores/lookups'
-import { useCompanyContextStore } from '@/stores/companyContext'
 import HistoryFilters from '@/components/HistoryFilters.vue'
 
 const mockGet = vi.mocked(api.get)
@@ -427,44 +426,4 @@ describe('HistoryFilters', () => {
     expect(history.filters.project_id).toBeUndefined()
   })
 
-  it('syncs history filters when global ctx.companyId changes to a specific company', async () => {
-    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
-    const history = useHistoryStore()
-    history.filters.employee_id = 'e1'
-    history.filters.project_id = 'p1'
-    history.filters.task_id = 't1'
-
-    const ctx = useCompanyContextStore()
-    ctx.companyId = 'all'
-
-    mount(HistoryFilters)
-    await new Promise((r) => setTimeout(r, 10))
-
-    ctx.companyId = 'c1'
-    await new Promise((r) => setTimeout(r, 10))
-
-    expect(history.filters.company_id).toBe('c1')
-    expect(history.filters.employee_id).toBeUndefined()
-    expect(history.filters.project_id).toBeUndefined()
-    expect(history.filters.task_id).toBeUndefined()
-    expect(mockGet).toHaveBeenCalled()
-  })
-
-  it('clears history company filter when global ctx.companyId changes to "all"', async () => {
-    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
-    const history = useHistoryStore()
-    history.filters.company_id = 'c1'
-
-    const ctx = useCompanyContextStore()
-    ctx.companyId = 'c1'
-
-    mount(HistoryFilters)
-    await new Promise((r) => setTimeout(r, 10))
-
-    ctx.companyId = 'all'
-    await new Promise((r) => setTimeout(r, 10))
-
-    expect(history.filters.company_id).toBeUndefined()
-    expect(mockGet).toHaveBeenCalled()
-  })
 })

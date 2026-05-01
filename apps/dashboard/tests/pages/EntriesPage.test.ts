@@ -13,7 +13,13 @@ vi.mock('@/services/api', () => ({
   fieldErrors: vi.fn(),
 }))
 
+import { api } from '@/services/api'
+import { useCompanyContextStore } from '@/stores/companyContext'
+import { useHistoryStore } from '@/stores/history'
+import { useDraftEntriesStore } from '@/stores/draftEntries'
 import EntriesPage from '@/pages/EntriesPage.vue'
+
+const mockGet = vi.mocked(api.get)
 
 const globalStubs = {
   NewEntriesTab: { template: '<div data-test="new-entries-tab-stub" />' },
@@ -53,6 +59,7 @@ describe('EntriesPage', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
+    localStorage.clear()
   })
 
   it('defaults to new tab when no query param', async () => {
@@ -255,5 +262,97 @@ describe('EntriesPage', () => {
     await new Promise((r) => setTimeout(r, 10))
 
     expect(router.currentRoute.value.query.tab).toBe('history')
+  })
+
+  it('changing ctx.companyId to a specific company updates history.filters.company_id and clears dependents', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const router = makeRouter('/entries')
+    await router.isReady()
+    const ctx = useCompanyContextStore()
+    const history = useHistoryStore()
+    history.filters.employee_id = 'e1'
+    history.filters.project_id = 'p1'
+    history.filters.task_id = 't1'
+    ctx.companyId = 'all'
+
+    const wrapper = mount(EntriesPage, { global: { plugins: [router], stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+
+    ctx.companyId = 'c1'
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.company_id).toBe('c1')
+    expect(history.filters.employee_id).toBeUndefined()
+    expect(history.filters.project_id).toBeUndefined()
+    expect(history.filters.task_id).toBeUndefined()
+    expect(history.filters.page).toBe(1)
+    expect(mockGet).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('changing ctx.companyId to "all" clears history.filters.company_id and reloads', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const router = makeRouter('/entries')
+    await router.isReady()
+    const ctx = useCompanyContextStore()
+    const history = useHistoryStore()
+    history.filters.company_id = 'c1'
+    ctx.companyId = 'c1'
+
+    const wrapper = mount(EntriesPage, { global: { plugins: [router], stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+
+    ctx.companyId = 'all'
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.company_id).toBeUndefined()
+    expect(mockGet).toHaveBeenCalled()
+    wrapper.unmount()
+  })
+
+  it('changing ctx.companyId to a specific company propagates to every draft row and clears dependents', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const router = makeRouter('/entries')
+    await router.isReady()
+    const ctx = useCompanyContextStore()
+    const drafts = useDraftEntriesStore()
+    drafts.addRow({ _id: 'r1', company_id: 'old-c', employee_id: 'e-old', project_id: 'p-old', task_id: 't-old' })
+    drafts.addRow({ _id: 'r2', company_id: undefined, employee_id: 'e-old2', project_id: 'p-old2', task_id: 't-old2' })
+
+    const wrapper = mount(EntriesPage, { global: { plugins: [router], stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+
+    ctx.companyId = 'c-new'
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(drafts.rows[0].company_id).toBe('c-new')
+    expect(drafts.rows[0].employee_id).toBeUndefined()
+    expect(drafts.rows[0].project_id).toBeUndefined()
+    expect(drafts.rows[0].task_id).toBeUndefined()
+    expect(drafts.rows[1].company_id).toBe('c-new')
+    expect(drafts.rows[1].employee_id).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  it('changing ctx.companyId to "all" leaves draft rows untouched', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const router = makeRouter('/entries')
+    await router.isReady()
+    const ctx = useCompanyContextStore()
+    const drafts = useDraftEntriesStore()
+    ctx.companyId = 'c1'
+    drafts.addRow({ _id: 'r1', company_id: 'c1', employee_id: 'e1', project_id: 'p1', task_id: 't1' })
+
+    const wrapper = mount(EntriesPage, { global: { plugins: [router], stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+
+    ctx.companyId = 'all'
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(drafts.rows[0].company_id).toBe('c1')
+    expect(drafts.rows[0].employee_id).toBe('e1')
+    expect(drafts.rows[0].project_id).toBe('p1')
+    expect(drafts.rows[0].task_id).toBe('t1')
+    wrapper.unmount()
   })
 })
