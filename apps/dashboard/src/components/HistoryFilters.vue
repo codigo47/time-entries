@@ -24,7 +24,10 @@ async function ensureAllLoaded() {
   }
 }
 
-onMounted(ensureAllLoaded)
+onMounted(async () => {
+  await lookups.loadCompanies()
+  await ensureAllLoaded()
+})
 watch(() => history.filters.company_id, ensureAllLoaded)
 
 function onFilter() {

@@ -60,7 +60,7 @@ describe('history store', () => {
     await store.load()
 
     expect(mockGet).toHaveBeenCalledWith('/time-entries', {
-      params: expect.objectContaining({ company_id: 'c1', employee_id: 'e1' }),
+      params: expect.objectContaining({ 'filter[company_id]': 'c1', 'filter[employee_id]': 'e1' }),
     })
   })
 
@@ -77,6 +77,50 @@ describe('history store', () => {
     expect(store.summary).toEqual(mockSummary)
   })
 
+  it('load wraps every filter field with filter[...] and passes paging/sort outside', async () => {
+    const store = useHistoryStore()
+    store.filters.company_id = 'c1'
+    store.filters.employee_id = 'e1'
+    store.filters.project_id = 'p1'
+    store.filters.task_id = 't1'
+    store.filters.date_from = '2026-01-01'
+    store.filters.date_to = '2026-12-31'
+    store.filters.page = 2
+    store.filters.per_page = 50
+    store.filters.sort = 'hours'
+    mockGet.mockResolvedValueOnce({ data: { data: [], meta: { current_page: 2, last_page: 5, per_page: 50, total: 200 } } } as never)
+
+    await store.load()
+
+    expect(mockGet).toHaveBeenCalledWith('/time-entries', {
+      params: {
+        per_page: 50,
+        page: 2,
+        sort: 'hours',
+        'filter[company_id]': 'c1',
+        'filter[employee_id]': 'e1',
+        'filter[project_id]': 'p1',
+        'filter[task_id]': 't1',
+        'filter[date_from]': '2026-01-01',
+        'filter[date_to]': '2026-12-31',
+      },
+    })
+  })
+
+  it('load omits all filter[...] params and undefined paging fields when filters are empty', async () => {
+    const store = useHistoryStore()
+    store.filters.per_page = undefined
+    store.filters.page = undefined
+    store.filters.sort = undefined
+    mockGet.mockResolvedValueOnce({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 10, total: 0 } } } as never)
+
+    await store.load()
+
+    const args = mockGet.mock.calls[0]
+    expect(args[0]).toBe('/time-entries')
+    expect(args[1]).toEqual({ params: {} })
+  })
+
   it('loadSummary merges current filters into the request params', async () => {
     const store = useHistoryStore()
     store.filters.company_id = 'c1'
@@ -85,7 +129,7 @@ describe('history store', () => {
     await store.loadSummary('employee')
 
     expect(mockGet).toHaveBeenCalledWith('/time-entries/summary', {
-      params: expect.objectContaining({ company_id: 'c1', group_by: 'employee' }),
+      params: expect.objectContaining({ 'filter[company_id]': 'c1', group_by: 'employee' }),
     })
   })
 })
