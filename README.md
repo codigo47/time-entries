@@ -52,21 +52,15 @@ Used by Laravel.
 | `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model used by the parse action. |
 | `FRONTEND_URL` | `http://127.0.0.1:5173` | Origin allowed by CORS. |
 
-### 4. Install backend dependencies
+### 4. Install backend dependencies and generate the Laravel app key
 
 ```bash
 cd apps/api
 composer install
-```
-
-### 5. Generate the Laravel app key
-
-```bash
-cd apps/api
 php artisan key:generate
 ```
 
-### 6. Edit `apps/dashboard/.env`
+### 5. Edit `apps/dashboard/.env`
 
 Used by Vite.
 
@@ -75,7 +69,7 @@ Used by Vite.
 | `VITE_API_BASE_URL` | `http://127.0.0.1:8000/api/v1` | Where the SPA sends API requests. |
 | `VITE_AI_ENABLED` | _unset_ (= enabled) | Set to `false` to hide the AI assist button. |
 
-### 7. Install frontend dependencies
+### 6. Install frontend dependencies
 
 ```bash
 cd ../..
