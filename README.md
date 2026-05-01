@@ -111,19 +111,42 @@ Open http://127.0.0.1:5173.
 
 ## Tests
 
+### Requirements
+
+- **Backend tests**: no extra requirements.
+- **Backend coverage** (`--coverage`): requires Xdebug or PCOV installed for the host PHP CLI.
+  - Ubuntu/Debian:
+
+    ```bash
+    sudo apt install php8.3-pcov
+    ```
+
+  - macOS (PECL):
+
+    ```bash
+    pecl install pcov
+    ```
+
+    Then add `extension=pcov.so` to your `php.ini`.
+- **Frontend tests**: no extra requirements (Vitest runs in jsdom).
+
+### Run backend tests
+
 ```bash
-# Backend (no coverage driver required)
-cd apps/api && ./vendor/bin/pest
-
-# Backend with coverage (requires Xdebug or PCOV — see apps/api/CLAUDE.md)
-cd apps/api && ./vendor/bin/pest --coverage
-
-# Frontend
-npm --workspace apps/dashboard run test
+cd apps/api
+./vendor/bin/pest
 ```
 
-> **PHP coverage driver:** `--coverage` requires Xdebug or PCOV installed for the host PHP CLI.
-> - macOS: `pecl install pcov && echo "extension=pcov.so" >> $(php --ini | grep 'Loaded Configuration' | awk '{print $NF}')`
-> - Ubuntu/Debian: `sudo apt install php8.3-pcov`
->
-> Running `pest` without `--coverage` works without any extension and confirms all tests pass.
+### Run backend tests with coverage
+
+```bash
+cd apps/api
+./vendor/bin/pest --coverage
+```
+
+### Run frontend tests
+
+```bash
+cd apps/dashboard
+npm run test
+```
