@@ -92,37 +92,31 @@ defineExpose({ submit, localValidate, errorsByRow, banner })
 </script>
 
 <template>
-  <div>
+  <div class="space-y-4">
     <AiAssistInput />
 
     <!-- Banner -->
     <div
       v-if="banner"
       data-test="banner"
-      style="font-family: var(--font-sans); font-size: 0.8125rem; font-style: italic; padding: 0.5rem 0; color: var(--graphite);"
+      class="text-sm text-muted-foreground"
     >
       {{ banner }}
     </div>
 
-    <!-- Ledger sheet card -->
-    <div
-      style="background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius);"
-    >
+    <!-- Entries card -->
+    <div class="rounded-lg border border-border bg-card">
       <table class="w-full" style="border-collapse: collapse;">
         <thead>
-          <tr style="border-bottom: 1px solid var(--rule);">
-            <!-- Margin column for sequence numbers -->
-            <th
-              style="width: 2.5rem; padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--graphite); text-align: left; border-right: 1px solid var(--rule);"
-            >#</th>
-            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Company</th>
-            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Date</th>
-            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Employee</th>
-            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Project</th>
-            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Task</th>
-            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: right;">Hours</th>
-            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Notes</th>
-            <th style="width: 3rem;"></th>
+          <tr class="border-b border-border">
+            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Company</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Date</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Employee</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Project</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Task</th>
+            <th class="px-3 py-2 text-right text-xs font-medium text-muted-foreground">Hours</th>
+            <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground">Notes</th>
+            <th class="w-12" />
           </tr>
         </thead>
         <tbody>
@@ -137,8 +131,8 @@ defineExpose({ submit, localValidate, errorsByRow, banner })
         </tbody>
       </table>
 
-      <!-- Footer inside the ledger card -->
-      <div style="border-top: 1px solid var(--rule); padding: 0.75rem 1rem;">
+      <!-- Footer inside the card -->
+      <div class="border-t border-border px-4 py-3">
         <EntryFooter @add-row="drafts.addRow()" @submit="submit" />
       </div>
     </div>

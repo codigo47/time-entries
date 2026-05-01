@@ -13,19 +13,19 @@ const shortcuts = [
 <template>
   <div
     data-test="shortcuts-dialog"
-    style="background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 1rem;"
+    class="rounded-lg border border-border bg-card p-5 mb-4"
   >
-    <h2
-      style="font-family: var(--font-display); font-size: 1rem; font-weight: 500; color: var(--ink); margin-bottom: 0.75rem; letter-spacing: -0.01em;"
-    >Keyboard shortcuts</h2>
+    <h2 class="text-sm font-semibold text-foreground mb-3">
+      Keyboard shortcuts
+    </h2>
     <ul style="list-style: none; margin: 0; padding: 0;">
       <li
         v-for="[k, v] in shortcuts"
         :key="k"
-        style="display: flex; align-items: baseline; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid var(--rule);"
+        class="flex items-baseline gap-4 py-1.5 border-b border-border last:border-0"
       >
-        <span style="width: 45%; flex-shrink: 0;"><kbd>{{ k }}</kbd></span>
-        <span style="font-family: var(--font-sans); font-size: 0.8125rem; color: var(--graphite);">{{ v }}</span>
+        <span class="w-5/12 flex-shrink-0"><kbd>{{ k }}</kbd></span>
+        <span class="text-sm text-muted-foreground">{{ v }}</span>
       </li>
     </ul>
   </div>

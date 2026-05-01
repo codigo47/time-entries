@@ -30,26 +30,19 @@ useKeyboardShortcuts([
 
 <template>
   <div>
+    <div class="mb-4">
+      <h1 style="font-family: var(--font-sans); font-size: 1.25rem; font-weight: 600; color: var(--foreground); letter-spacing: -0.01em;">
+        Time Entries
+      </h1>
+    </div>
     <ShortcutsDialog v-if="showShortcuts" />
     <!-- v8 ignore next -->
-    <Tabs v-model="tab" class="w-full tabs-ledger">
-      <TabsList
-        class="bg-transparent border-0 shadow-none p-0 gap-8 mb-6 h-auto justify-start tabs-list-ledger"
-      >
-        <TabsTrigger
-          value="new"
-          class="tab-trigger-ledger bg-transparent border-0 shadow-none px-0 py-2 h-auto rounded-none data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-          style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; color: var(--graphite); border-bottom: 2px solid transparent; transition: color 150ms, border-color 150ms;"
-          :style="tab === 'new' ? 'color: var(--ink); border-bottom-color: var(--vermilion);' : ''"
-        >
+    <Tabs v-model="tab" class="w-full">
+      <TabsList class="mb-4">
+        <TabsTrigger value="new">
           New Entries
         </TabsTrigger>
-        <TabsTrigger
-          value="history"
-          class="tab-trigger-ledger bg-transparent border-0 shadow-none px-0 py-2 h-auto rounded-none data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-          style="font-family: var(--font-display); font-size: 1.5rem; font-weight: 400; color: var(--graphite); border-bottom: 2px solid transparent; transition: color 150ms, border-color 150ms;"
-          :style="tab === 'history' ? 'color: var(--ink); border-bottom-color: var(--vermilion);' : ''"
-        >
+        <TabsTrigger value="history">
           History
         </TabsTrigger>
       </TabsList>

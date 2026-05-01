@@ -1,5 +1,5 @@
-/* Drafting Studio Ledger — font imports */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Geist:wght@300..700&family=JetBrains+Mono:ital,wght@0,400..600;1,400..600&display=swap');
+/* Mason Time Entries — font imports */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300..700&family=JetBrains+Mono:ital,wght@0,400..600;1,400..600&display=swap');
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -9,109 +9,82 @@
   color-scheme: light;
   --radius: 0.375rem;
 
-  /* Brand palette */
-  --ink:        #0F0E0C;
-  --paper:      #F4EFE6;
-  --paper-2:    #ECE5D6;
-  --rule:       #D7CDB8;
-  --graphite:   #6B6356;
-  --vermilion:  #C8442A;
-  --ledger:     #2B5D4A;
-  --blueprint:  #2B4A8A;
-  --warning:    #B8772A;
-  --error:      #A8321F;
+  /* shadcn / Tailwind semantic tokens — neutral minimalist */
+  --background:             #FFFFFF;
+  --foreground:             #0A0A0A;
+  --card:                   #FFFFFF;
+  --card-foreground:        #0A0A0A;
+  --popover:                #FFFFFF;
+  --popover-foreground:     #0A0A0A;
+  --primary:                #0A0A0A;
+  --primary-foreground:     #FFFFFF;
+  --secondary:              #F5F5F5;
+  --secondary-foreground:   #171717;
+  --muted:                  #F5F5F5;
+  --muted-foreground:       #737373;
+  --accent:                 #F5F5F5;
+  --accent-foreground:      #171717;
+  --destructive:            #DC2626;
+  --border:                 #E5E5E5;
+  --input:                  #E5E5E5;
+  --ring:                   #0A0A0A;
 
-  /* shadcn / Tailwind semantic tokens — mapped to our palette */
-  --background:             var(--paper);
-  --foreground:             var(--ink);
-  --card:                   var(--paper-2);
-  --card-foreground:        var(--ink);
-  --popover:                var(--paper);
-  --popover-foreground:     var(--ink);
-  --primary:                var(--ink);
-  --primary-foreground:     var(--paper);
-  --secondary:              var(--paper-2);
-  --secondary-foreground:   var(--ink);
-  --muted:                  var(--paper-2);
-  --muted-foreground:       var(--graphite);
-  --accent:                 var(--rule);
-  --accent-foreground:      var(--ink);
-  --destructive:            var(--vermilion);
-  --border:                 var(--rule);
-  --input:                  var(--rule);
-  --ring:                   var(--vermilion);
+  /* Charts */
+  --chart-1: #0A0A0A;
+  --chart-2: #525252;
+  --chart-3: #737373;
+  --chart-4: #A3A3A3;
+  --chart-5: #D4D4D4;
 
-  /* Charts — keep roughly consistent */
-  --chart-1: #C8442A;
-  --chart-2: #2B5D4A;
-  --chart-3: #2B4A8A;
-  --chart-4: #B8772A;
-  --chart-5: #6B6356;
-
-  /* Sidebar — unused in this app, map neutrally */
-  --sidebar:                          var(--paper-2);
-  --sidebar-foreground:               var(--ink);
-  --sidebar-primary:                  var(--ink);
-  --sidebar-primary-foreground:       var(--paper);
-  --sidebar-accent:                   var(--rule);
-  --sidebar-accent-foreground:        var(--ink);
-  --sidebar-border:                   var(--rule);
-  --sidebar-ring:                     var(--vermilion);
+  /* Sidebar */
+  --sidebar:                          #F5F5F5;
+  --sidebar-foreground:               #0A0A0A;
+  --sidebar-primary:                  #0A0A0A;
+  --sidebar-primary-foreground:       #FFFFFF;
+  --sidebar-accent:                   #F5F5F5;
+  --sidebar-accent-foreground:        #171717;
+  --sidebar-border:                   #E5E5E5;
+  --sidebar-ring:                     #0A0A0A;
 }
 
 /* ── Dark mode ───────────────────────────────────────────────── */
 .dark {
   color-scheme: dark;
 
-  --ink:       #F4EFE6;
-  --paper:     #161413;
-  --paper-2:   #1E1C1A;
-  --rule:      #3A3530;
-  --graphite:  #9E9488;
-  --vermilion: #D45030;
-  --ledger:    #3A7A60;
-  --blueprint: #4A6AB8;
-  --warning:   #C8882A;
-  --error:     #C04030;
+  --background:             #0A0A0A;
+  --foreground:             #FAFAFA;
+  --card:                   #0A0A0A;
+  --card-foreground:        #FAFAFA;
+  --popover:                #0A0A0A;
+  --popover-foreground:     #FAFAFA;
+  --primary:                #FAFAFA;
+  --primary-foreground:     #0A0A0A;
+  --secondary:              #1A1A1A;
+  --secondary-foreground:   #FAFAFA;
+  --muted:                  #1A1A1A;
+  --muted-foreground:       #A3A3A3;
+  --accent:                 #1A1A1A;
+  --accent-foreground:      #FAFAFA;
+  --destructive:            #DC2626;
+  --border:                 #262626;
+  --input:                  #262626;
+  --ring:                   #FAFAFA;
 
-  --background:             var(--paper);
-  --foreground:             var(--ink);
-  --card:                   var(--paper-2);
-  --card-foreground:        var(--ink);
-  --popover:                var(--paper-2);
-  --popover-foreground:     var(--ink);
-  --primary:                var(--ink);
-  --primary-foreground:     var(--paper);
-  --secondary:              var(--paper-2);
-  --secondary-foreground:   var(--ink);
-  --muted:                  var(--paper-2);
-  --muted-foreground:       var(--graphite);
-  --accent:                 var(--rule);
-  --accent-foreground:      var(--ink);
-  --destructive:            var(--vermilion);
-  --border:                 var(--rule);
-  --input:                  var(--rule);
-  --ring:                   var(--vermilion);
-
-  --sidebar:                var(--paper-2);
-  --sidebar-foreground:     var(--ink);
-  --sidebar-primary:        var(--ink);
-  --sidebar-primary-foreground: var(--paper);
-  --sidebar-accent:         var(--rule);
-  --sidebar-accent-foreground: var(--ink);
-  --sidebar-border:         var(--rule);
-  --sidebar-ring:           var(--vermilion);
+  --sidebar:                #1A1A1A;
+  --sidebar-foreground:     #FAFAFA;
+  --sidebar-primary:        #FAFAFA;
+  --sidebar-primary-foreground: #0A0A0A;
+  --sidebar-accent:         #1A1A1A;
+  --sidebar-accent-foreground: #FAFAFA;
+  --sidebar-border:         #262626;
+  --sidebar-ring:           #FAFAFA;
 }
 
 /* ── Tailwind @theme — expose as utilities ───────────────────── */
 @theme inline {
   /* Fonts */
-  --font-display: 'Fraunces', Georgia, serif;
   --font-sans:    'Geist', 'Inter Tight', system-ui, sans-serif;
   --font-mono:    'JetBrains Mono', 'Fira Code', monospace;
-
-  /* Keep legacy --font-heading alias */
-  --font-heading: var(--font-display);
 
   /* Colors */
   --color-background:             var(--background);
@@ -132,18 +105,6 @@
   --color-border:                 var(--border);
   --color-input:                  var(--input);
   --color-ring:                   var(--ring);
-
-  /* Brand palette as utilities */
-  --color-ink:       var(--ink);
-  --color-paper:     var(--paper);
-  --color-paper-2:   var(--paper-2);
-  --color-rule:      var(--rule);
-  --color-graphite:  var(--graphite);
-  --color-vermilion: var(--vermilion);
-  --color-ledger:    var(--ledger);
-  --color-blueprint: var(--blueprint);
-  --color-warning:   var(--warning);
-  --color-error:     var(--error);
 
   /* Charts */
   --color-chart-1: var(--chart-1);
@@ -183,39 +144,29 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.5;
-    /* Faint dot-grid graph-paper background */
-    background-image: radial-gradient(circle, var(--rule) 1px, transparent 1px);
-    background-size: 24px 24px;
-    background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-display);
+    font-family: var(--font-sans);
+    font-weight: 600;
   }
 
-  code, kbd, pre, samp, .font-mono {
+  code, pre, samp, .font-mono {
     font-family: var(--font-mono);
   }
 
-  /* kbd styling — marginalia pop-up style */
+  /* kbd — small bordered boxes */
   kbd {
     font-family: var(--font-mono);
     font-size: 0.75em;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--border);
     border-radius: 3px;
     padding: 1px 5px;
-    background: var(--paper-2);
-    color: var(--ink);
+    background: var(--muted);
+    color: var(--foreground);
     display: inline-block;
     line-height: 1.4;
-  }
-
-  /* Motion defaults */
-  :root {
-    --ease-studio: cubic-bezier(0.2, 0.8, 0.2, 1.0);
   }
 }
