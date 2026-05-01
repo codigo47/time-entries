@@ -24,7 +24,18 @@ Lookup endpoints set `Cache-Control: private, max-age=60` and an `ETag` from `Et
 
 - `tests/Unit/` — pure unit tests for models, services, actions
 - `tests/Feature/` — HTTP tests for endpoints and form requests
-- Run: `./vendor/bin/pest --coverage`
+- Run: `./vendor/bin/pest` (no coverage driver required)
+- Run with coverage: `./vendor/bin/pest --coverage`
+
+### Coverage driver requirement
+
+`--coverage` requires Xdebug or PCOV installed for the host PHP CLI binary. Without it, Pest exits with "No code coverage driver is available". Running `pest` without `--coverage` confirms tests pass and does not require any extension.
+
+**Install PCOV:**
+
+- macOS (PECL): `pecl install pcov && echo "extension=pcov.so" >> $(php --ini | grep 'Loaded Configuration' | awk '{print $NF}')`
+- Ubuntu/Debian: `sudo apt install php8.3-pcov`
+- Via PECL (any OS): `pecl install pcov` then add `extension=pcov.so` to your `php.ini`
 
 ## Adding a new endpoint
 

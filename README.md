@@ -46,9 +46,18 @@ Visit http://127.0.0.1:5173.
 ## Tests
 
 ```bash
-# Backend
+# Backend (no coverage driver required)
+cd apps/api && ./vendor/bin/pest
+
+# Backend with coverage (requires Xdebug or PCOV — see apps/api/CLAUDE.md)
 cd apps/api && ./vendor/bin/pest --coverage
 
 # Frontend
 npm --workspace apps/dashboard run test
 ```
+
+> **PHP coverage driver:** `--coverage` requires Xdebug or PCOV installed for the host PHP CLI.
+> - macOS: `pecl install pcov && echo "extension=pcov.so" >> $(php --ini | grep 'Loaded Configuration' | awk '{print $NF}')`
+> - Ubuntu/Debian: `sudo apt install php8.3-pcov`
+>
+> Running `pest` without `--coverage` works without any extension and confirms all tests pass.
