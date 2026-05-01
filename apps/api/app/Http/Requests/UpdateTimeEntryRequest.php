@@ -24,4 +24,10 @@ class UpdateTimeEntryRequest extends FormRequest
             $r,
         ), $rules);
     }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return $this->rowMessages();
+    }
 }

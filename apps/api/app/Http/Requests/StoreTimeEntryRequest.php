@@ -19,4 +19,10 @@ class StoreTimeEntryRequest extends FormRequest
     {
         return $this->rowRules();
     }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return $this->rowMessages();
+    }
 }

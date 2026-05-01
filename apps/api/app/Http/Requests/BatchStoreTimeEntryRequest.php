@@ -22,4 +22,10 @@ class BatchStoreTimeEntryRequest extends FormRequest
             $this->rowRules('entries.*.'),
         );
     }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return $this->rowMessages('entries.*.');
+    }
 }

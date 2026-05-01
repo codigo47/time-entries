@@ -3,6 +3,7 @@
 namespace App\Actions;
 
 use App\Exceptions\TimeEntryValidationException;
+use App\Models\Company;
 use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Task;
@@ -40,9 +41,26 @@ class CreateTimeEntries
         foreach ($rows as $i => $row) {
             $key = $row['employee_id'].'|'.$row['date'];
             if (isset($byEmpDate[$key]) && $byEmpDate[$key]['project_id'] !== $row['project_id']) {
-                $errors["entries.$i.project_id"][] = 'Conflicts with another row in this batch for the same employee and date.';
+                $conflictIdx = $byEmpDate[$key]['idx'];
+                $rowNum = $i + 1;
+                $conflictRowNum = $conflictIdx + 1;
+
+                // Try to resolve names for descriptive message
+                /** @var Employee|null $empForMsg */
+                $empForMsg = Employee::find($row['employee_id']);
+                /** @var Project|null $projA */
+                $projA = Project::find($byEmpDate[$key]['project_id']);
+                /** @var Project|null $projB */
+                $projB = Project::find($row['project_id']);
+
+                $employeeName = $empForMsg instanceof Employee ? $empForMsg->name : $row['employee_id'];
+                $projectAName = $projA instanceof Project ? $projA->name : $byEmpDate[$key]['project_id'];
+                $projectBName = $projB instanceof Project ? $projB->name : $row['project_id'];
+
+                $errors["entries.$i.project_id"][] = "Conflict with row {$conflictRowNum}: {$employeeName} can only work on one project per day, "
+                    ."but rows {$conflictRowNum} and {$rowNum} specify different projects ('{$projectAName}' vs '{$projectBName}') on {$row['date']}.";
             } else {
-                $byEmpDate[$key] = $row;
+                $byEmpDate[$key] = array_merge($row, ['idx' => $i]);
             }
         }
 
@@ -54,18 +72,32 @@ class CreateTimeEntries
             $project = Project::find($row['project_id']);
             /** @var Task|null $task */
             $task = Task::find($row['task_id']);
+            /** @var Company|null $company */
+            $company = Company::find($row['company_id']);
+
+            $companyName = $company instanceof Company ? $company->name : $row['company_id'];
+            $employeeName = $employee instanceof Employee ? $employee->name : $row['employee_id'];
+            $projectName = $project instanceof Project ? $project->name : $row['project_id'];
 
             if (! $employee instanceof Employee || ! $employee->companies->contains('id', $row['company_id'])) {
-                $errors["entries.$i.employee_id"][] = 'Employee does not belong to the selected company.';
+                $errors["entries.$i.employee_id"][] = "'{$employeeName}' is not an employee of '{$companyName}'.";
             }
             if (! $project instanceof Project || $project->company_id !== $row['company_id']) {
-                $errors["entries.$i.project_id"][] = 'Project does not belong to the selected company.';
+                if ($project instanceof Project) {
+                    /** @var Company|null $projectCompany */
+                    $projectCompany = Company::find($project->company_id);
+                    $projectCompanyName = $projectCompany instanceof Company ? $projectCompany->name : $project->company_id;
+                    $errors["entries.$i.project_id"][] = "Project '{$projectName}' belongs to '{$projectCompanyName}' but the entry is for '{$companyName}'.";
+                } else {
+                    $errors["entries.$i.project_id"][] = "Project '{$projectName}' does not belong to '{$companyName}'.";
+                }
             }
             if (! $task instanceof Task || $task->company_id !== $row['company_id']) {
-                $errors["entries.$i.task_id"][] = 'Task does not belong to the selected company.';
+                $taskName = $task instanceof Task ? $task->name : $row['task_id'];
+                $errors["entries.$i.task_id"][] = "Task '{$taskName}' does not belong to '{$companyName}'.";
             }
             if ($employee instanceof Employee && $project instanceof Project && ! $employee->projects->contains('id', $row['project_id'])) {
-                $errors["entries.$i.project_id"][] = 'Employee is not assigned to this project.';
+                $errors["entries.$i.project_id"][] = "'{$employeeName}' is not assigned to project '{$projectName}'.";
             }
 
             // Lock and check for "one project per employee per date"
@@ -73,8 +105,12 @@ class CreateTimeEntries
                 ->where('date', $row['date'])
                 ->lockForUpdate()
                 ->first();
-            if ($existing && $existing->project_id !== $row['project_id']) {
-                $errors["entries.$i.project_id"][] = 'Employee already has a different project on this date.';
+            if ($existing instanceof TimeEntry && $existing->project_id !== $row['project_id']) {
+                /** @var Project|null $existingProject */
+                $existingProject = Project::find($existing->project_id);
+                $existingProjectName = $existingProject instanceof Project ? $existingProject->name : $existing->project_id;
+                $errors["entries.$i.project_id"][] = "{$employeeName} already has time entries for project '{$existingProjectName}' on {$row['date']}. "
+                    .'An employee can only work on one project per day (but multiple tasks within that project).';
             }
         }
 

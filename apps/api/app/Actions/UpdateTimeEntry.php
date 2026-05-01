@@ -3,6 +3,8 @@
 namespace App\Actions;
 
 use App\Exceptions\TimeEntryValidationException;
+use App\Models\Employee;
+use App\Models\Project;
 use App\Models\TimeEntry;
 use Illuminate\Support\Facades\DB;
 
@@ -42,7 +44,16 @@ class UpdateTimeEntry
 
         foreach ($existing as $other) {
             if ($other->project_id !== $merged['project_id']) {
-                $errors['project_id'][] = 'Employee already has a different project on this date.';
+                /** @var Employee|null $emp */
+                $emp = Employee::find($merged['employee_id']);
+                $employeeName = $emp instanceof Employee ? $emp->name : $merged['employee_id'];
+
+                /** @var Project|null $proj */
+                $proj = Project::find($other->project_id);
+                $existingProjectName = $proj instanceof Project ? $proj->name : $other->project_id;
+
+                $errors['project_id'][] = "{$employeeName} already has time entries for project '{$existingProjectName}' on {$merged['date']}. "
+                    .'An employee can only work on one project per day (but multiple tasks within that project).';
                 break;
             }
         }
