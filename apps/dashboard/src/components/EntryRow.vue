@@ -197,27 +197,25 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
       </div>
     </div>
 
-    <!-- Line 3: Action row — centered -->
+    <!-- Line 3: Action row — centered icon buttons -->
     <div class="flex justify-center gap-3">
       <button
         data-test="duplicate-btn"
         aria-label="Duplicate row"
         title="Duplicate row"
-        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+        class="inline-flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity"
         @click="emit('duplicate')"
       >
         <Copy class="size-4" />
-        Duplicate
       </button>
       <button
         data-test="remove-btn"
         aria-label="Remove row"
         title="Remove row"
-        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+        class="inline-flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity"
         @click="emit('remove')"
       >
         <Trash2 class="size-4" />
-        Remove
       </button>
     </div>
   </div>
