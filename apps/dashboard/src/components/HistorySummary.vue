@@ -47,7 +47,7 @@ watch(groupBy, (v) => {
             style="border-bottom: 1px solid var(--rule);"
           >
             <td style="padding: 0.4rem 0.5rem 0.4rem 0; font-family: var(--font-sans); font-size: 0.8125rem; color: var(--ink);">{{ row.group_key }}</td>
-            <td style="padding: 0.4rem 0.5rem; font-family: var(--font-mono); font-size: 0.875rem; font-weight: 500; text-align: right; color: var(--ink);">{{ row.total_hours.toFixed(2) }}</td>
+            <td style="padding: 0.4rem 0.5rem; font-family: var(--font-mono); font-size: 0.875rem; font-weight: 500; text-align: right; color: var(--ink);">{{ Number(row.total_hours).toFixed(2) }}</td>
             <td style="padding: 0.4rem 0 0.4rem 0.5rem; font-family: var(--font-mono); font-size: 0.8125rem; text-align: right; color: var(--graphite);">{{ row.entry_count }}</td>
           </tr>
         </tbody>
