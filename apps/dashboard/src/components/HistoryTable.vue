@@ -211,15 +211,15 @@ defineExpose({ saveEdit, editItem, editError, actionError })
           <template v-for="item in history.items" :key="item.id">
             <tr
               data-test="history-row"
-              class="hover:bg-muted/40 transition-colors"
+              :class="['hover:bg-muted/40 transition-colors', item.notes ? '' : '']"
             >
-              <td class="px-3 py-2 border-b border-border">{{ formatDateMDY(item.date) }}</td>
-              <td class="px-3 py-2 border-b border-border">{{ item.company?.name ?? item.company_id }}</td>
-              <td class="px-3 py-2 border-b border-border">{{ item.project?.name ?? item.project_id }}</td>
-              <td class="px-3 py-2 border-b border-border">{{ item.employee?.name ?? item.employee_id }}</td>
-              <td class="px-3 py-2 border-b border-border">{{ item.task?.name ?? item.task_id }}</td>
-              <td class="px-3 py-2 text-right font-medium border-b border-border">{{ item.hours }} h</td>
-              <td class="px-3 py-2 text-right border-b border-border">
+              <td :class="['px-3 py-2', item.notes ? '' : 'border-b border-border']">{{ formatDateMDY(item.date) }}</td>
+              <td :class="['px-3 py-2', item.notes ? '' : 'border-b border-border']">{{ item.company?.name ?? item.company_id }}</td>
+              <td :class="['px-3 py-2', item.notes ? '' : 'border-b border-border']">{{ item.project?.name ?? item.project_id }}</td>
+              <td :class="['px-3 py-2', item.notes ? '' : 'border-b border-border']">{{ item.employee?.name ?? item.employee_id }}</td>
+              <td :class="['px-3 py-2', item.notes ? '' : 'border-b border-border']">{{ item.task?.name ?? item.task_id }}</td>
+              <td :class="['px-3 py-2 text-right font-medium', item.notes ? '' : 'border-b border-border']">{{ item.hours }} h</td>
+              <td :class="['px-3 py-2 text-right', item.notes ? '' : 'border-b border-border']">
                 <button
                   data-test="edit-btn"
                   aria-label="Edit entry"
