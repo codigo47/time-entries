@@ -409,14 +409,14 @@ describe('EntryRow', () => {
     expect(btn.attributes('aria-label')).toBe('AI assist')
   })
 
-  it('aiEnabled defaults to false when VITE_AI_ENABLED env is unset (default prop factory)', () => {
+  it('aiEnabled defaults to true when VITE_AI_ENABLED env is unset (default prop factory)', () => {
     // omit aiEnabled prop entirely — triggers withDefaults factory which reads import.meta.env
     const wrapper = mount(EntryRow, {
       props: { draft: baseDraft, rowErrors: {} },
       global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
     })
-    // In test env VITE_AI_ENABLED is not 'true', so button should be disabled
-    expect((wrapper.find('[data-test="ai-btn"]').element as HTMLButtonElement).disabled).toBe(true)
+    // In test env VITE_AI_ENABLED is not 'false', so button should be enabled
+    expect((wrapper.find('[data-test="ai-btn"]').element as HTMLButtonElement).disabled).toBe(false)
     wrapper.unmount()
   })
 
@@ -460,9 +460,9 @@ describe('EntryRow', () => {
     document.body.querySelectorAll('[data-test="ai-entry-dialog"]').forEach((el) => el.remove())
   })
 
-  it('AI button is disabled when aiEnabled prop is false (default)', () => {
+  it('AI button is disabled when aiEnabled prop is explicitly false', () => {
     const wrapper = mount(EntryRow, {
-      props: { draft: baseDraft, rowErrors: {} },
+      props: { draft: baseDraft, rowErrors: {}, aiEnabled: false },
       global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
     })
     const btn = wrapper.find('[data-test="ai-btn"]')
