@@ -78,119 +78,197 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
 
 <template>
   <div data-test="history-table">
-    <div v-if="actionError" class="text-red-600 text-sm mb-2" data-test="action-error">
-      {{ actionError }}
-    </div>
+    <!-- Action error -->
+    <div
+      v-if="actionError"
+      data-test="action-error"
+      style="font-family: var(--font-sans); font-style: italic; font-size: 0.8125rem; color: var(--error); margin-bottom: 0.75rem;"
+    >{{ actionError }}</div>
 
-    <!-- Edit dialog -->
-    <div v-if="editItem" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" data-test="edit-dialog">
-      <div class="bg-white rounded p-6 w-80 space-y-3">
-        <h3 class="font-semibold">
+    <!-- Edit dialog — inset card -->
+    <div
+      v-if="editItem"
+      class="fixed inset-0 flex items-center justify-center z-50"
+      style="background: rgba(15,14,12,0.45);"
+      data-test="edit-dialog"
+    >
+      <div
+        style="background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 1.75rem 2rem; width: 22rem;"
+      >
+        <h3 style="font-family: var(--font-display); font-size: 1.125rem; font-weight: 500; color: var(--ink); margin-bottom: 1rem; letter-spacing: -0.01em;">
           Edit Entry
         </h3>
-        <label class="block text-sm">Hours
-          <input v-model.number="editHours" data-test="edit-hours" type="number" step="0.25" min="0.25" max="24" class="block w-full border rounded px-2 py-1" />
+        <label style="display: block; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--graphite); margin-bottom: 0.75rem;">
+          Hours
+          <input
+            v-model.number="editHours"
+            data-test="edit-hours"
+            type="number"
+            step="0.25"
+            min="0.25"
+            max="24"
+            style="display: block; width: 100%; margin-top: 0.3rem; background: transparent; border: none; border-bottom: 1px solid var(--rule); outline: none; font-family: var(--font-mono); font-size: 1rem; font-weight: 500; color: var(--ink); padding: 0.2rem 0;"
+          />
         </label>
-        <label class="block text-sm">Notes
-          <input v-model="editNotes" data-test="edit-notes" type="text" class="block w-full border rounded px-2 py-1" />
+        <label style="display: block; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--graphite); margin-bottom: 1.25rem;">
+          Notes
+          <input
+            v-model="editNotes"
+            data-test="edit-notes"
+            type="text"
+            style="display: block; width: 100%; margin-top: 0.3rem; background: transparent; border: none; border-bottom: 1px solid var(--rule); outline: none; font-family: var(--font-sans); font-style: italic; font-size: 0.875rem; color: var(--ink); padding: 0.2rem 0;"
+          />
         </label>
-        <div class="flex gap-2 justify-end">
-          <button data-test="edit-cancel" @click="cancelEdit">
-            Cancel
-          </button>
-          <button data-test="edit-save" @click="saveEdit">
-            Save
-          </button>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button
+            data-test="edit-cancel"
+            style="font-family: var(--font-sans); font-size: 0.8125rem; color: var(--graphite); background: transparent; border: none; cursor: pointer; padding: 0;"
+            @click="cancelEdit"
+          >Cancel</button>
+          <button
+            data-test="edit-save"
+            style="font-family: var(--font-display); font-size: 0.9rem; font-weight: 500; letter-spacing: 0.08em; background: var(--ledger); color: var(--paper); border: none; cursor: pointer; padding: 0.4rem 1rem; border-radius: var(--radius);"
+            @click="saveEdit"
+          >Save</button>
         </div>
       </div>
     </div>
 
     <!-- Delete confirm dialog -->
-    <div v-if="deleteId" class="fixed inset-0 bg-black/40 flex items-center justify-center z-50" data-test="delete-dialog">
-      <div class="bg-white rounded p-6 w-72 space-y-3">
-        <h3 class="font-semibold">
+    <div
+      v-if="deleteId"
+      class="fixed inset-0 flex items-center justify-center z-50"
+      style="background: rgba(15,14,12,0.45);"
+      data-test="delete-dialog"
+    >
+      <div
+        style="background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 1.75rem 2rem; width: 20rem;"
+      >
+        <h3 style="font-family: var(--font-display); font-size: 1.125rem; font-weight: 500; color: var(--ink); margin-bottom: 0.5rem; letter-spacing: -0.01em;">
           Delete Entry?
         </h3>
-        <p class="text-sm">
+        <p style="font-family: var(--font-sans); font-size: 0.8125rem; font-style: italic; color: var(--graphite); margin-bottom: 1.25rem;">
           This cannot be undone.
         </p>
-        <div class="flex gap-2 justify-end">
-          <button data-test="delete-cancel" @click="cancelDelete">
-            Cancel
-          </button>
-          <button data-test="delete-confirm" class="text-red-600" @click="doDelete">
-            Delete
-          </button>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+          <button
+            data-test="delete-cancel"
+            style="font-family: var(--font-sans); font-size: 0.8125rem; color: var(--graphite); background: transparent; border: none; cursor: pointer; padding: 0;"
+            @click="cancelDelete"
+          >Cancel</button>
+          <button
+            data-test="delete-confirm"
+            style="font-family: var(--font-display); font-size: 0.9rem; font-weight: 500; letter-spacing: 0.08em; background: var(--vermilion); color: var(--paper); border: none; cursor: pointer; padding: 0.4rem 1rem; border-radius: var(--radius);"
+            @click="doDelete"
+          >Delete</button>
         </div>
       </div>
     </div>
 
-    <table class="w-full text-sm">
-      <thead>
-        <tr>
-          <th class="cursor-pointer text-left" @click="setSort('date')">
-            Date
-          </th>
-          <th class="text-left">
-            Employee
-          </th>
-          <th class="text-left">
-            Project
-          </th>
-          <th class="text-left">
-            Task
-          </th>
-          <th class="cursor-pointer text-left" @click="setSort('hours')">
-            Hours
-          </th>
-          <th class="text-left">
-            Notes
-          </th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="history.items.length === 0">
-          <td colspan="7" class="text-center py-4 text-gray-500">
-            No entries found.
-          </td>
-        </tr>
-        <tr v-for="item in history.items" :key="item.id" data-test="history-row">
-          <td>{{ item.date }}</td>
-          <td>{{ item.employee?.name ?? item.employee_id }}</td>
-          <td>{{ item.project?.name ?? item.project_id }}</td>
-          <td>{{ item.task?.name ?? item.task_id }}</td>
-          <td>{{ item.hours }}</td>
-          <td>{{ item.notes }}</td>
-          <td class="flex gap-1">
-            <button data-test="edit-btn" @click="startEdit(item)">
-              Edit
-            </button>
-            <button data-test="delete-btn" @click="confirmDelete(item.id)">
-              Delete
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <!-- Ledger table -->
+    <div style="background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius);">
+      <table class="w-full" style="border-collapse: collapse; font-size: 0.875rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--rule);">
+            <th
+              class="cursor-pointer sort-th"
+              :data-sort="(history.filters.sort ?? '-date') === 'date' ? 'asc' : (history.filters.sort === '-date' ? 'desc' : '')"
+              style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left; user-select: none;"
+              @click="setSort('date')"
+            >Date</th>
+            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Employee</th>
+            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Project</th>
+            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Task</th>
+            <th
+              class="cursor-pointer sort-th"
+              :data-sort="history.filters.sort === 'hours' ? 'asc' : /* v8 ignore next */ (history.filters.sort === '-hours' ? 'desc' : '')"
+              style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: right; user-select: none;"
+              @click="setSort('hours')"
+            >Hours</th>
+            <th style="padding: 0.6rem 0.75rem; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--graphite); text-align: left;">Notes</th>
+            <th style="width: 5rem;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="history.items.length === 0">
+            <td
+              colspan="7"
+              style="text-align: center; padding: 2rem; font-family: var(--font-sans); font-style: italic; font-size: 0.875rem; color: var(--graphite); border-bottom: 1px solid var(--rule);"
+            >No entries found.</td>
+          </tr>
+          <tr
+            v-for="item in history.items"
+            :key="item.id"
+            data-test="history-row"
+            style="border-bottom: 1px solid var(--rule);"
+            class="history-row-hover"
+          >
+            <td style="padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.8rem; color: var(--ink);">{{ item.date }}</td>
+            <td style="padding: 0.5rem 0.75rem; font-family: var(--font-sans); font-size: 0.875rem; color: var(--ink);">{{ item.employee?.name ?? item.employee_id }}</td>
+            <td style="padding: 0.5rem 0.75rem; font-family: var(--font-sans); font-size: 0.875rem; color: var(--ink);">{{ item.project?.name ?? item.project_id }}</td>
+            <td style="padding: 0.5rem 0.75rem; font-family: var(--font-sans); font-size: 0.875rem; color: var(--graphite);">{{ item.task?.name ?? item.task_id }}</td>
+            <td style="padding: 0.5rem 0.75rem; font-family: var(--font-mono); font-size: 0.875rem; font-weight: 500; text-align: right; color: var(--ink);">{{ item.hours }}</td>
+            <td style="padding: 0.5rem 0.75rem; font-family: var(--font-sans); font-style: italic; font-size: 0.875rem; color: var(--graphite);">{{ item.notes }}</td>
+            <td style="padding: 0.5rem 0.75rem; text-align: right;">
+              <div style="display: flex; gap: 0.5rem; justify-content: flex-end; opacity: 0; transition: opacity 180ms;" class="row-actions-hist">
+                <button
+                  data-test="edit-btn"
+                  style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--blueprint); background: transparent; border: none; cursor: pointer; padding: 1px 4px; letter-spacing: 0.05em;"
+                  @click="startEdit(item)"
+                >edit</button>
+                <button
+                  data-test="delete-btn"
+                  style="font-family: var(--font-mono); font-size: 0.7rem; color: var(--vermilion); background: transparent; border: none; cursor: pointer; padding: 1px 4px; letter-spacing: 0.05em;"
+                  @click="confirmDelete(item.id)"
+                >×</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
-    <!-- Pagination -->
-    <div class="flex items-center gap-2 mt-3" data-test="pagination">
-      <button
-        data-test="page-prev"
-        :disabled="history.meta.current_page <= 1"
-        @click="setPage(history.meta.current_page - 1)"
+      <!-- Pagination — mono text style -->
+      <div
+        class="flex items-center justify-center gap-3"
+        style="padding: 0.75rem; border-top: 1px solid var(--rule);"
+        data-test="pagination"
       >
-        Prev
-      </button>
-      <span>Page {{ history.meta.current_page }} of {{ history.meta.last_page }}</span>
-      <button
-        data-test="page-next"
-        :disabled="history.meta.current_page >= history.meta.last_page"
-        @click="setPage(history.meta.current_page + 1)"
-      >
-        Next
-      </button>
+        <button
+          data-test="page-prev"
+          :disabled="history.meta.current_page <= 1"
+          style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--graphite); background: transparent; border: none; cursor: pointer; padding: 0; disabled:opacity-40;"
+          :style="history.meta.current_page <= 1 ? 'opacity: 0.35; cursor: default;' : ''"
+          @click="setPage(history.meta.current_page - 1)"
+        >← previous</button>
+        <span style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--rule);">·</span>
+        <span style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--ink);">{{ history.meta.current_page }} / {{ history.meta.last_page }}</span>
+        <span style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--rule);">·</span>
+        <button
+          data-test="page-next"
+          :disabled="history.meta.current_page >= history.meta.last_page"
+          style="font-family: var(--font-mono); font-size: 0.8125rem; color: var(--graphite); background: transparent; border: none; cursor: pointer; padding: 0;"
+          :style="history.meta.current_page >= history.meta.last_page ? 'opacity: 0.35; cursor: default;' : ''"
+          @click="setPage(history.meta.current_page + 1)"
+        >next →</button>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.history-row-hover:hover .row-actions-hist {
+  opacity: 1 !important;
+}
+.sort-th::after {
+  content: '';
+  margin-left: 0.25em;
+  opacity: 0.5;
+  font-size: 0.8em;
+}
+.sort-th[data-sort='asc']::after {
+  content: '↑';
+}
+.sort-th[data-sort='desc']::after {
+  content: '↓';
+}
+</style>

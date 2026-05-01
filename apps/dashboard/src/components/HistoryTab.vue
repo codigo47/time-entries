@@ -18,7 +18,7 @@ onMounted(() => { history.load() })
 </script>
 
 <template>
-  <div class="space-y-4" data-test="history-tab">
+  <div class="space-y-6" data-test="history-tab">
     <HistoryFilters />
     <HistoryTable />
     <HistorySummary />
