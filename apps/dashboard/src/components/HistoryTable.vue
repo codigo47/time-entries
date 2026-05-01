@@ -11,21 +11,38 @@ const history = useHistoryStore()
 const editItem = ref<TimeEntryDto | null>(null)
 const editHours = ref<number>(0)
 const editNotes = ref<string>('')
+const editError = ref<string | null>(null)
 const actionError = ref<string | null>(null)
 
 function startEdit(item: TimeEntryDto) {
   editItem.value = { ...item }
   editHours.value = item.hours
   editNotes.value = item.notes ?? ''
+  editError.value = null
   actionError.value = null
 }
 
 function cancelEdit() {
   editItem.value = null
+  editError.value = null
+}
+
+function validateEditHours(): string | null {
+  const v = Number(editHours.value)
+  if (!Number.isFinite(v) || v <= 0) return 'Enter the number of hours worked.'
+  if (v > 24) return 'Hours cannot exceed 24 in a single entry.'
+  if (!Number.isInteger(v * 4)) return 'Hours must be in 15-minute increments (e.g. 0.25, 0.50, 0.75).'
+  return null
 }
 
 async function saveEdit() {
   if (!editItem.value) return
+  const localErr = validateEditHours()
+  if (localErr) {
+    editError.value = localErr
+    return
+  }
+  editError.value = null
   try {
     await api.patch(`/time-entries/${editItem.value.id}`, {
       hours: editHours.value,
@@ -70,7 +87,7 @@ function sortIcon(field: string) {
 const dateSortState = computed(() => sortIcon('date'))
 const hoursSortState = computed(() => sortIcon('hours'))
 
-defineExpose({ saveEdit, editItem, actionError })
+defineExpose({ saveEdit, editItem, editError, actionError })
 </script>
 
 <template>
@@ -101,8 +118,10 @@ defineExpose({ saveEdit, editItem, actionError })
             step="0.25"
             min="0.25"
             max="24"
-            class="block w-full border border-border rounded px-2 py-1.5 text-sm outline-none focus:border-ring focus:ring-1 focus:ring-ring/50"
+            :class="['block w-full border rounded px-2 py-1.5 text-sm outline-none focus:ring-1', editError ? 'border-destructive focus:border-destructive focus:ring-destructive/50' : 'border-border focus:border-ring focus:ring-ring/50']"
+            @input="editError = null"
           />
+          <p v-if="editError" data-test="edit-error" class="text-xs text-destructive mt-1">{{ editError }}</p>
         </label>
         <label class="block text-sm text-foreground">
           <span class="text-xs text-muted-foreground mb-1 block">Notes</span>

@@ -120,6 +120,86 @@ describe('HistoryTable', () => {
     expect(mockPatch).toHaveBeenCalledWith('/time-entries/te-1', expect.objectContaining({ hours: 6 }))
   })
 
+  it('blocks save and shows "Hours cannot exceed 24" when editing > 24', async () => {
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+
+    await wrapper.find('[data-test="edit-btn"]').trigger('click')
+    await wrapper.find('[data-test="edit-hours"]').setValue('25')
+    await wrapper.find('[data-test="edit-save"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="edit-error"]').text()).toBe('Hours cannot exceed 24 in a single entry.')
+    expect(mockPatch).not.toHaveBeenCalled()
+    expect(wrapper.find('[data-test="edit-dialog"]').exists()).toBe(true)
+  })
+
+  it('blocks save and shows guidance when editing hours <= 0', async () => {
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+
+    await wrapper.find('[data-test="edit-btn"]').trigger('click')
+    await wrapper.find('[data-test="edit-hours"]').setValue('0')
+    await wrapper.find('[data-test="edit-save"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="edit-error"]').text()).toContain('Enter the number of hours worked.')
+    expect(mockPatch).not.toHaveBeenCalled()
+  })
+
+  it('blocks save and shows quarter-hour guidance for non-step values', async () => {
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+
+    await wrapper.find('[data-test="edit-btn"]').trigger('click')
+    await wrapper.find('[data-test="edit-hours"]').setValue('1.1')
+    await wrapper.find('[data-test="edit-save"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="edit-error"]').text()).toContain('15-minute increments')
+    expect(mockPatch).not.toHaveBeenCalled()
+  })
+
+  it('clears edit error on hours input', async () => {
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+
+    await wrapper.find('[data-test="edit-btn"]').trigger('click')
+    await wrapper.find('[data-test="edit-hours"]').setValue('30')
+    await wrapper.find('[data-test="edit-save"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="edit-error"]').exists()).toBe(true)
+
+    await wrapper.find('[data-test="edit-hours"]').setValue('5')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="edit-error"]').exists()).toBe(false)
+  })
+
+  it('cancelEdit clears edit error', async () => {
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+
+    await wrapper.find('[data-test="edit-btn"]').trigger('click')
+    await wrapper.find('[data-test="edit-hours"]').setValue('30')
+    await wrapper.find('[data-test="edit-save"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="edit-error"]').exists()).toBe(true)
+
+    await wrapper.find('[data-test="edit-cancel"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-test="edit-dialog"]').exists()).toBe(false)
+  })
+
   it('shows error when PATCH fails', async () => {
     mockPatch.mockRejectedValueOnce(new Error('Network error'))
     const history = useHistoryStore()
