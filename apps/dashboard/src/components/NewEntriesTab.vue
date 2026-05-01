@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { AlertCircle } from 'lucide-vue-next'
+import { AlertCircle, CheckCircle2 } from 'lucide-vue-next'
 import { useDraftEntriesStore } from '@/stores/draftEntries'
 import { useLookupsStore } from '@/stores/lookups'
 import { useCompanyContextStore } from '@/stores/companyContext'
@@ -141,10 +141,12 @@ defineExpose({ submit, localValidate, errorsByRow, banner })
     <!-- Success / info banner (no errors) -->
     <div
       v-else-if="banner"
+      role="status"
       data-test="banner"
-      class="text-sm text-muted-foreground"
+      class="rounded-md border border-green-600/50 bg-green-50 p-3 text-sm text-green-700 flex gap-2 items-start"
     >
-      {{ banner }}
+      <CheckCircle2 class="size-4 mt-0.5 shrink-0" />
+      <span>{{ banner }}</span>
     </div>
 
     <!-- Entry cards stack -->
