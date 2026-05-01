@@ -55,13 +55,16 @@ Used by Laravel.
 ### 4. Install backend dependencies
 
 ```bash
-cd apps/api && composer install
+cd apps/api
+composer install
 ```
 
 ### 5. Generate the Laravel app key
 
+From `apps/api`:
+
 ```bash
-cd apps/api && php artisan key:generate
+php artisan key:generate
 ```
 
 ### 6. Edit `apps/dashboard/.env`
@@ -75,15 +78,18 @@ Used by Vite.
 
 ### 7. Install frontend dependencies
 
+From the repository root:
+
 ```bash
+cd /path/to/repo-root
 npm install
 ```
 
 ## Run
 
-Open four terminals and run one command in each, **in this order**:
+Open four terminals and run the commands below, **in this order**.
 
-**Terminal 1 — Postgres**
+**Terminal 1 — Postgres** (from the repo root)
 
 ```bash
 docker compose up
@@ -92,16 +98,18 @@ docker compose up
 **Terminal 2 — Migrations and seeders** (run once, then close this terminal)
 
 ```bash
-cd apps/api && php artisan migrate:fresh --seed
+cd apps/api
+php artisan migrate:fresh --seed
 ```
 
 **Terminal 3 — Backend (API)**
 
 ```bash
-cd apps/api && php artisan serve --host=127.0.0.1 --port=8000
+cd apps/api
+php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-**Terminal 4 — Frontend (dashboard)**
+**Terminal 4 — Frontend (dashboard)** (from the repo root)
 
 ```bash
 npm --workspace apps/dashboard run dev
