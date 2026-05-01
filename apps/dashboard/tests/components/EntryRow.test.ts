@@ -520,6 +520,43 @@ describe('EntryRow', () => {
     expect(wrapper.find('[data-test="ai-unmatched-banner"]').text()).toContain('project')
   })
 
+  it('suppresses company-clear watcher when AI applies a complete row including company change', async () => {
+    const lookups = useLookupsStore()
+    lookups.companies = [{ id: 'c1', name: 'Acme' }]
+    lookups.employeesByCompany = { c1: [{ id: 'e1', name: 'Alice', email: 'a@test.com' }] }
+    lookups.projectsByCompany = { c1: [{ id: 'p1', company_id: 'c1', name: 'Alpha' }] }
+    lookups.tasksByCompany = { c1: [{ id: 't1', company_id: 'c1', name: 'Dev' }] }
+
+    const FullRowApplyStub = {
+      name: 'AiEntryDialog',
+      props: ['modelValue'],
+      emits: ['update:modelValue', 'apply'],
+      template: '<div v-if="modelValue" data-test="ai-entry-dialog-stub"><button data-test="stub-apply-full" @click="$emit(\'apply\', { row: { company_id: \'c1\', employee_id: \'e1\', project_id: \'p1\', task_id: \'t1\' }, unmatched: [] })">Apply</button></div>',
+    }
+
+    const Parent = {
+      components: { EntryRow, AiEntryDialog: FullRowApplyStub },
+      data() {
+        return { draft: { ...baseDraft, company_id: undefined, employee_id: undefined, project_id: undefined, task_id: undefined } }
+      },
+      template: '<EntryRow :draft="draft" :row-errors="{}" :ai-enabled="true" @update:draft="(v) => draft = v" />',
+    }
+
+    const wrapper = mount(Parent, { global: { stubs: { AiEntryDialog: FullRowApplyStub } } })
+    await wrapper.find('[data-test="ai-btn"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    await wrapper.find('[data-test="stub-apply-full"]').trigger('click')
+    // Wait for both watchers to settle
+    await new Promise((r) => setTimeout(r, 30))
+
+    // After all watchers ran, employee/project/task should still be set
+    const draft = (wrapper.vm as unknown as { draft: TimeEntryDraft }).draft
+    expect(draft.company_id).toBe('c1')
+    expect(draft.employee_id).toBe('e1')
+    expect(draft.project_id).toBe('p1')
+    expect(draft.task_id).toBe('t1')
+  })
+
   it('apply event with empty unmatched does not show banner', async () => {
     const NoUnmatchedStub = {
       name: 'AiEntryDialog',

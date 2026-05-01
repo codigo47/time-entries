@@ -39,6 +39,9 @@ const tasks = computed(() =>
 const hasErrors = computed(() => Object.keys(props.rowErrors).length > 0)
 const errorCount = computed(() => Object.keys(props.rowErrors).length)
 
+const suppressCompanyClear = ref(false)
+const suppressProjectClear = ref(false)
+
 watch(() => props.draft.company_id, async (id) => {
   if (!id) return
   await Promise.all([
@@ -46,6 +49,10 @@ watch(() => props.draft.company_id, async (id) => {
     lookups.loadProjects(id),
     lookups.loadTasks(id),
   ])
+  if (suppressCompanyClear.value) {
+    suppressCompanyClear.value = false
+    return
+  }
   // clear dependent fields when company changes
   emit('update:draft', { ...props.draft, employee_id: undefined, project_id: undefined, task_id: undefined })
 })
@@ -53,6 +60,10 @@ watch(() => props.draft.company_id, async (id) => {
 watch(() => props.draft.project_id, async (projectId) => {
   if (!projectId) return
   await lookups.loadEmployeesByProject(projectId)
+  if (suppressProjectClear.value) {
+    suppressProjectClear.value = false
+    return
+  }
   // If current employee_id is not in the filtered list, clear it
   if (props.draft.employee_id && !employees.value.some(e => e.id === props.draft.employee_id)) {
     emit('update:draft', { ...props.draft, employee_id: undefined })
@@ -71,6 +82,13 @@ const aiUnmatched = ref<string[]>([])
 
 function onAiApply({ row, unmatched }: { row: PartialDraft; unmatched: string[] }) {
   aiUnmatched.value = unmatched
+  // Suppress the cascading clear watchers when AI provides a complete row
+  if (row.company_id && row.company_id !== props.draft.company_id) {
+    suppressCompanyClear.value = true
+  }
+  if (row.project_id && row.project_id !== props.draft.project_id) {
+    suppressProjectClear.value = true
+  }
   emit('update:draft', { ...props.draft, ...row })
 }
 
