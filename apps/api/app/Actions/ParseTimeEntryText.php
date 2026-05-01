@@ -23,7 +23,18 @@ class ParseTimeEntryText
             'model' => config('openai.model', 'gpt-4o-mini'),
             'response_format' => ['type' => 'json_object'],
             'messages' => [
-                ['role' => 'system', 'content' => 'You parse natural-language time-entry descriptions into structured rows. Use ONLY names that exist in the provided directory. Output JSON: {"rows":[{"company_name","employee_name","project_name","task_name","date","hours","notes"}]}.'],
+                ['role' => 'system', 'content' => <<<'PROMPT'
+You parse natural-language time-entry descriptions into structured JSON rows.
+
+Output format — JSON only, nothing else:
+{"rows":[{"company_name":"","employee_name":"","project_name":"","task_name":"","date":"YYYY-MM-DD","hours":0,"notes":""}]}
+
+Rules:
+1. If the user's message is NOT requesting to create a time entry (e.g. it is a question, an opinion, or unrelated text), respond with {"rows":[]} and nothing else.
+2. Use ONLY names that exist in the provided directory. Leave a field as an empty string if no match is found.
+3. Be tolerant of minor typos in entity names — match the closest name in the directory when the intent is clear.
+4. Output valid JSON only. No markdown, no explanation, no extra keys.
+PROMPT],
                 ['role' => 'user', 'content' => "Directory:\n".$context."\n\nUser text:\n".$text],
             ],
         ]);

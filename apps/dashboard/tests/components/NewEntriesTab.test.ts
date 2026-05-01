@@ -22,7 +22,6 @@ const mockGet = vi.mocked(api.get)
 const mockFieldErrors = vi.mocked(fieldErrors)
 
 const globalStubs = {
-  AiAssistInput: { template: '<div data-test="ai-assist-stub" />' },
   EntryRow: {
     props: ['draft', 'rowErrors'],
     emits: ['update:draft', 'duplicate', 'remove'],

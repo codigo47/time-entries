@@ -9,7 +9,6 @@ import { api, fieldErrors } from '@/services/api'
 import { timeEntryRowSchema } from '@shared/schemas/timeEntry'
 import EntryRow from './EntryRow.vue'
 import EntryFooter from './EntryFooter.vue'
-import AiAssistInput from './AiAssistInput.vue'
 
 const drafts = useDraftEntriesStore()
 const lookups = useLookupsStore()
@@ -125,8 +124,6 @@ defineExpose({ submit, localValidate, errorsByRow, banner })
 
 <template>
   <div class="space-y-4">
-    <AiAssistInput />
-
     <!-- Validation summary alert -->
     <div
       v-if="banner && totalErrors > 0"

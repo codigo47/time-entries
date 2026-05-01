@@ -17,6 +17,13 @@ import { useLookupsStore } from '@/stores/lookups'
 import EntryRow from '@/components/EntryRow.vue'
 import type { TimeEntryDraft } from '@shared/schemas/timeEntry'
 
+const AiEntryDialogStub = {
+  name: 'AiEntryDialog',
+  props: ['modelValue'],
+  emits: ['update:modelValue', 'apply'],
+  template: '<div v-if="modelValue" data-test="ai-entry-dialog-stub"><button data-test="stub-apply" @click="$emit(\'apply\', { row: { hours: 99 }, unmatched: [\'project\'] })">Apply</button></div>',
+}
+
 const mockGet = vi.mocked(api.get)
 
 const baseDraft: TimeEntryDraft = {
@@ -390,5 +397,148 @@ describe('EntryRow', () => {
     expect(emitted).toBeTruthy()
     const clearEmit = emitted.find((e) => e[0].employee_id === undefined)
     expect(clearEmit).toBeTruthy()
+  })
+
+  it('AI button exists and has aria-label', () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {} },
+      global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
+    })
+    const btn = wrapper.find('[data-test="ai-btn"]')
+    expect(btn.exists()).toBe(true)
+    expect(btn.attributes('aria-label')).toBe('AI assist')
+  })
+
+  it('aiEnabled defaults to false when VITE_AI_ENABLED env is unset (default prop factory)', () => {
+    // omit aiEnabled prop entirely — triggers withDefaults factory which reads import.meta.env
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {} },
+      global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
+    })
+    // In test env VITE_AI_ENABLED is not 'true', so button should be disabled
+    expect((wrapper.find('[data-test="ai-btn"]').element as HTMLButtonElement).disabled).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('real AiEntryDialog apply event merges parsed row into draft', async () => {
+    // Mount EntryRow without stubbing AiEntryDialog — exercises the template VNode handler
+    const lookups = useLookupsStore()
+    lookups.companies = [{ id: 'c1', name: 'Acme' }]
+    lookups.employeesByCompany = { c1: [{ id: 'e1', name: 'Alice', email: 'a@test.com' }] }
+    lookups.projectsByCompany = { c1: [{ id: 'p1', company_id: 'c1', name: 'Alpha' }] }
+    lookups.tasksByCompany = { c1: [{ id: 't1', company_id: 'c1', name: 'Dev' }] }
+
+    const { api: apiModule } = await import('@/services/api')
+    vi.mocked(apiModule.post).mockResolvedValueOnce({
+      data: {
+        rows: [{ company_id: 'c1', employee_id: 'e1', project_id: 'p1', task_id: 't1', date: '2026-05-01', hours: 4, notes: null }],
+      },
+    } as never)
+
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {}, aiEnabled: true },
+      attachTo: document.body,
+    })
+
+    // Open the real dialog
+    await wrapper.find('[data-test="ai-btn"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    // Fill textarea and submit via document.body
+    const textarea = document.body.querySelector('[data-test="ai-entry-textarea"]') as HTMLTextAreaElement
+    textarea.value = 'Alice worked 4 hours'
+    textarea.dispatchEvent(new Event('input'))
+    document.body.querySelector<HTMLElement>('[data-test="ai-entry-submit"]')!.click()
+    await new Promise((r) => setTimeout(r, 20))
+
+    // The apply event flows back to EntryRow, merging the draft
+    const emitted = wrapper.emitted('update:draft') as TimeEntryDraft[][]
+    expect(emitted).toBeTruthy()
+    expect(emitted[0][0].company_id).toBe('c1')
+
+    wrapper.unmount()
+    document.body.querySelectorAll('[data-test="ai-entry-dialog"]').forEach((el) => el.remove())
+  })
+
+  it('AI button is disabled when aiEnabled prop is false (default)', () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {} },
+      global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
+    })
+    const btn = wrapper.find('[data-test="ai-btn"]')
+    expect((btn.element as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('AI button is enabled when aiEnabled prop is true', () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {}, aiEnabled: true },
+      global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
+    })
+    const btn = wrapper.find('[data-test="ai-btn"]')
+    expect((btn.element as HTMLButtonElement).disabled).toBe(false)
+  })
+
+  it('clicking AI button when enabled opens AiEntryDialog', async () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {}, aiEnabled: true },
+      global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
+    })
+    await wrapper.find('[data-test="ai-btn"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="ai-entry-dialog-stub"]').exists()).toBe(true)
+  })
+
+  it('apply event from AiEntryDialog merges row into draft via update:draft', async () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {}, aiEnabled: true },
+      global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
+    })
+    await wrapper.find('[data-test="ai-btn"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-test="stub-apply"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const emitted = wrapper.emitted('update:draft') as TimeEntryDraft[][]
+    expect(emitted).toBeTruthy()
+    expect(emitted[0][0].hours).toBe(99)
+  })
+
+  it('apply event with unmatched fields shows ai-unmatched-banner', async () => {
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {}, aiEnabled: true },
+      global: { stubs: { AiEntryDialog: AiEntryDialogStub } },
+    })
+    await wrapper.find('[data-test="ai-btn"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-test="stub-apply"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="ai-unmatched-banner"]').exists()).toBe(true)
+    expect(wrapper.find('[data-test="ai-unmatched-banner"]').text()).toContain('project')
+  })
+
+  it('apply event with empty unmatched does not show banner', async () => {
+    const NoUnmatchedStub = {
+      name: 'AiEntryDialog',
+      props: ['modelValue'],
+      emits: ['update:modelValue', 'apply'],
+      template: '<div v-if="modelValue" data-test="ai-entry-dialog-stub"><button data-test="stub-apply-clean" @click="$emit(\'apply\', { row: { hours: 5 }, unmatched: [] })">Apply</button></div>',
+    }
+    const wrapper = mount(EntryRow, {
+      props: { draft: baseDraft, rowErrors: {}, aiEnabled: true },
+      global: { stubs: { AiEntryDialog: NoUnmatchedStub } },
+    })
+    await wrapper.find('[data-test="ai-btn"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    await wrapper.find('[data-test="stub-apply-clean"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="ai-unmatched-banner"]').exists()).toBe(false)
+    const emitted = wrapper.emitted('update:draft') as TimeEntryDraft[][]
+    expect(emitted[0][0].hours).toBe(5)
   })
 })

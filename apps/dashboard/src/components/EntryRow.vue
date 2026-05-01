@@ -1,14 +1,21 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
-import { Copy, Trash2 } from 'lucide-vue-next'
+import { computed, ref, watch } from 'vue'
+import { Copy, Sparkles, Trash2 } from 'lucide-vue-next'
 import type { TimeEntryDraft } from '@shared/schemas/timeEntry'
 import { useLookupsStore } from '@/stores/lookups'
+import AiEntryDialog from './AiEntryDialog.vue'
+import type { PartialDraft } from './AiEntryDialog.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   draft: TimeEntryDraft
   rowErrors: Record<string, string[]>
   seq?: number
-}>()
+  aiEnabled?: boolean
+}>(), {
+  seq: undefined,
+  /* c8 ignore next */
+  aiEnabled: () => import.meta.env.VITE_AI_ENABLED !== 'false',
+})
 const emit = defineEmits<{
   (e: 'update:draft', value: TimeEntryDraft): void
   (e: 'duplicate'): void
@@ -57,6 +64,14 @@ function set<K extends keyof TimeEntryDraft>(key: K, value: TimeEntryDraft[K]) {
 }
 function err(field: string): string | undefined {
   return props.rowErrors[field]?.[0]
+}
+
+const aiOpen = ref(false)
+const aiUnmatched = ref<string[]>([])
+
+function onAiApply({ row, unmatched }: { row: PartialDraft; unmatched: string[] }) {
+  aiUnmatched.value = unmatched
+  emit('update:draft', { ...props.draft, ...row })
 }
 
 const labelClass = 'block text-xs text-muted-foreground mb-1'
@@ -197,26 +212,52 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
       </div>
     </div>
 
-    <!-- Line 3: Action row — centered icon buttons -->
-    <div class="flex justify-center gap-3">
-      <button
-        data-test="duplicate-btn"
-        aria-label="Duplicate row"
-        title="Duplicate row"
-        class="inline-flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity"
-        @click="emit('duplicate')"
-      >
-        <Copy class="size-4" />
-      </button>
-      <button
-        data-test="remove-btn"
-        aria-label="Remove row"
-        title="Remove row"
-        class="inline-flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity"
-        @click="emit('remove')"
-      >
-        <Trash2 class="size-4" />
-      </button>
+    <!-- AI unmatched banner -->
+    <div
+      v-if="aiUnmatched.length"
+      class="mb-3 rounded-md border border-destructive/50 bg-destructive/5 px-3 py-2 text-xs text-destructive"
+      data-test="ai-unmatched-banner"
+    >
+      AI could not match: {{ aiUnmatched.join(', ') }}. Please complete those fields manually.
     </div>
+
+    <!-- Line 3: Action row — 3-column layout -->
+    <div class="grid grid-cols-3 items-center">
+      <div />
+      <div class="flex justify-center gap-3">
+        <button
+          data-test="duplicate-btn"
+          aria-label="Duplicate row"
+          title="Duplicate row"
+          class="inline-flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity"
+          @click="emit('duplicate')"
+        >
+          <Copy class="size-4" />
+        </button>
+        <button
+          data-test="remove-btn"
+          aria-label="Remove row"
+          title="Remove row"
+          class="inline-flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity"
+          @click="emit('remove')"
+        >
+          <Trash2 class="size-4" />
+        </button>
+      </div>
+      <div class="flex justify-end">
+        <button
+          data-test="ai-btn"
+          aria-label="AI assist"
+          title="AI assist"
+          :disabled="!props.aiEnabled"
+          class="inline-flex items-center justify-center size-10 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          @click="aiOpen = true"
+        >
+          <Sparkles class="size-4" />
+        </button>
+      </div>
+    </div>
+
+    <AiEntryDialog v-model="aiOpen" @apply="onAiApply" />
   </div>
 </template>
