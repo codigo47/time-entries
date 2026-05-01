@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import CompanyContext from '@/components/CompanyContext.vue'
+</script>
+
 <template>
   <div class="min-h-screen bg-background text-foreground">
     <header class="border-b">
@@ -5,8 +9,7 @@
         <h1 class="text-lg font-semibold">
           Time Entry
         </h1>
-        <!-- CompanyContext component goes here (built in Phase 8b) -->
-        <div class="ml-auto" />
+        <CompanyContext />
       </div>
     </header>
     <main class="mx-auto max-w-6xl p-4">

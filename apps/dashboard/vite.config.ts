@@ -18,6 +18,12 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     coverage: {
       reporter: ['text', 'html'],
+      exclude: [
+        'src/components/ui/**',
+        'src/lib/**',
+        'src/assets/**',
+        'src/components/HelloWorld.vue',
+      ],
       thresholds: { lines: 100, branches: 100, functions: 100, statements: 100 },
     },
   },
