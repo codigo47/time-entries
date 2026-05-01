@@ -11,13 +11,71 @@ A Laravel 12 REST API + Vue 3 SPA for recording employee time entries. See `READ
 
 ## Setup
 
-Copy the env files and fill in the required values (see [Environment variables](#environment-variables)).
+### 1. Copy the env files
 
 ```bash
 cp .env.example .env
 cp apps/api/.env.example apps/api/.env
 cp apps/dashboard/.env.example apps/dashboard/.env
-(cd apps/api && composer install && php artisan key:generate)
+```
+
+### 2. Edit the root `.env`
+
+Used by `docker-compose.yml` to start Postgres.
+
+| Key | Default | Description |
+|---|---|---|
+| `POSTGRES_PORT` | `5477` | Host port the Postgres container binds to. |
+| `POSTGRES_DB` | `time_entries` | Database name. |
+| `POSTGRES_USER` | `time_entries` | Database user. |
+| `POSTGRES_PASSWORD` | `time_entries` | Database password. Change it for non-local environments. |
+
+### 3. Edit `apps/api/.env`
+
+Used by Laravel.
+
+| Key | Default | Description |
+|---|---|---|
+| `APP_KEY` | _empty_ | Generated in step 4 below. |
+| `APP_ENV` | `local` | `local` for dev, `production` for prod. |
+| `APP_DEBUG` | `true` | Set to `false` in production. |
+| `APP_URL` | `http://127.0.0.1:8000` | Public URL of the API. |
+| `DB_HOST` | `127.0.0.1` | Postgres host. |
+| `DB_PORT` | `5477` | Must match `POSTGRES_PORT` from the root `.env`. |
+| `DB_DATABASE` | `time_entries` | Must match `POSTGRES_DB`. |
+| `DB_USERNAME` | `time_entries` | Must match `POSTGRES_USER`. |
+| `DB_PASSWORD` | `time_entries` | Must match `POSTGRES_PASSWORD`. |
+| `CACHE_STORE` | `database` | Cache backend. |
+| `SESSION_DRIVER` | `array` | No sessions used. |
+| `QUEUE_CONNECTION` | `sync` | No queue worker used. |
+| `OPENAI_API_KEY` | _empty_ | Required only for the AI-assisted entry feature. Get one at https://platform.openai.com/api-keys. |
+| `OPENAI_MODEL` | `gpt-4o-mini` | OpenAI model used by the parse action. |
+| `FRONTEND_URL` | `http://127.0.0.1:5173` | Origin allowed by CORS. |
+
+### 4. Generate the Laravel app key
+
+```bash
+cd apps/api && php artisan key:generate
+```
+
+### 5. Edit `apps/dashboard/.env`
+
+Used by Vite.
+
+| Key | Default | Description |
+|---|---|---|
+| `VITE_API_BASE_URL` | `http://127.0.0.1:8000/api/v1` | Where the SPA sends API requests. |
+| `VITE_AI_ENABLED` | _unset_ (= enabled) | Set to `false` to hide the AI assist button. |
+
+### 6. Install backend dependencies
+
+```bash
+cd apps/api && composer install
+```
+
+### 7. Install frontend dependencies
+
+```bash
 npm install
 ```
 
@@ -50,53 +108,6 @@ npm --workspace apps/dashboard run dev
 ```
 
 Open http://127.0.0.1:5173.
-
-## Environment variables
-
-There are **three** `.env` files, one per concern. **The project will not run until you fill them in** — start by copying each `*.env.example` to `*.env` (see [Setup → step 1](#1-copy-environment-files)) and review the keys below.
-
-### Root `.env`
-
-Read by `docker-compose.yml` to provision the Postgres container.
-
-| Key | Required | Default | Description |
-|---|---|---|---|
-| `POSTGRES_PORT` | ✓ | `5477` | Host-side port for the Postgres container. The API connects to this port via `DB_PORT` in `apps/api/.env`. |
-| `POSTGRES_DB` | ✓ | `time_entries` | Database name created on first boot. |
-| `POSTGRES_USER` | ✓ | `time_entries` | Database user. |
-| `POSTGRES_PASSWORD` | ✓ | `time_entries` | Database password. **Change this in any non-local environment.** |
-
-### `apps/api/.env`
-
-Read by Laravel.
-
-| Key | Required | Default | Description |
-|---|---|---|---|
-| `APP_KEY` | ✓ | _empty_ | Laravel app key. Generate with `(cd apps/api && php artisan key:generate)` after copying the example. |
-| `APP_ENV` | ✓ | `local` | `local` / `production`. |
-| `APP_DEBUG` | ✓ | `true` | Set to `false` in production. |
-| `APP_URL` | ✓ | `http://127.0.0.1:8000` | Public URL of the API. |
-| `DB_CONNECTION` | ✓ | `pgsql` | Stick with `pgsql`. |
-| `DB_HOST` | ✓ | `127.0.0.1` | Postgres host. Use `127.0.0.1` if Postgres is in Docker. |
-| `DB_PORT` | ✓ | `5477` | Must match `POSTGRES_PORT` from the root `.env`. |
-| `DB_DATABASE` | ✓ | `time_entries` | Must match `POSTGRES_DB`. |
-| `DB_USERNAME` | ✓ | `time_entries` | Must match `POSTGRES_USER`. |
-| `DB_PASSWORD` | ✓ | `time_entries` | Must match `POSTGRES_PASSWORD`. |
-| `CACHE_STORE` | ✓ | `database` | Where Laravel cache lives. The `cache` migration provides the table. |
-| `SESSION_DRIVER` | ✓ | `array` | Stateless API — no session table needed. |
-| `QUEUE_CONNECTION` | ✓ | `sync` | No queue worker — jobs run inline. |
-| `OPENAI_API_KEY` | ⚠ optional | _empty_ | Set to enable the AI-assisted entry feature. Get one from https://platform.openai.com/api-keys. Leave blank and the parse endpoint returns empty results, the modal still opens but won't fill anything. |
-| `OPENAI_MODEL` | optional | `gpt-4o-mini` | OpenAI model used by the parse action. |
-| `FRONTEND_URL` | ✓ | `http://127.0.0.1:5173` | Origin allowed by CORS. Must match where the dashboard runs. |
-
-### `apps/dashboard/.env`
-
-Read by Vite at build/dev time.
-
-| Key | Required | Default | Description |
-|---|---|---|---|
-| `VITE_API_BASE_URL` | ✓ | `http://127.0.0.1:8000/api/v1` | Where the SPA sends API requests. Must match `APP_URL` + `/api/v1`. |
-| `VITE_AI_ENABLED` | optional | _unset_ (= enabled) | Set to `false` to hide the per-row AI assist button. Any other value (or unset) keeps it enabled. |
 
 ## Tests
 
