@@ -57,6 +57,32 @@ describe('NewEntriesTab', () => {
     expect(drafts.rows.length).toBe(1)
   })
 
+  it('clears stale company_id from draft rows when company no longer exists in lookups', async () => {
+    const { useLookupsStore } = await import('@/stores/lookups')
+    const lookups = useLookupsStore()
+    lookups.companies = [{ id: 'c-fresh', name: 'Fresh Co' }]
+    const drafts = useDraftEntriesStore()
+    drafts.addRow({ _id: 'r1', company_id: 'c-stale', employee_id: 'e-stale', project_id: 'p-stale', task_id: 't-stale' })
+    mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+    expect(drafts.rows[0].company_id).toBeUndefined()
+    expect(drafts.rows[0].employee_id).toBeUndefined()
+    expect(drafts.rows[0].project_id).toBeUndefined()
+    expect(drafts.rows[0].task_id).toBeUndefined()
+  })
+
+  it('preserves company_id when it matches a loaded company', async () => {
+    const { useLookupsStore } = await import('@/stores/lookups')
+    const lookups = useLookupsStore()
+    lookups.companies = [{ id: 'c-real', name: 'Real Co' }]
+    const drafts = useDraftEntriesStore()
+    drafts.addRow({ _id: 'r1', company_id: 'c-real', employee_id: 'e-x' })
+    mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await new Promise((r) => setTimeout(r, 10))
+    expect(drafts.rows[0].company_id).toBe('c-real')
+    expect(drafts.rows[0].employee_id).toBe('e-x')
+  })
+
   it('uses company from context when adding initial row (non-all)', async () => {
     const ctx = useCompanyContextStore()
     ctx.companyId = 'c1'

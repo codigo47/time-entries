@@ -23,6 +23,16 @@ const totalErrors = computed(() =>
 
 onMounted(async () => {
   await lookups.loadCompanies()
+  // Sanity check: clear stale references that no longer exist (e.g. after a DB reset).
+  // Only run when companies actually loaded so tests with empty stubs don't lose stub IDs.
+  if (lookups.companies.length > 0) {
+    const validCompanyIds = new Set(lookups.companies.map((c) => c.id))
+    drafts.rows.forEach((row, i) => {
+      if (row.company_id && !validCompanyIds.has(row.company_id)) {
+        drafts.rows[i] = { ...row, company_id: undefined, employee_id: undefined, project_id: undefined, task_id: undefined }
+      }
+    })
+  }
   if (drafts.rows.length === 0) {
     drafts.addRow({ company_id: ctx.companyId !== 'all' ? ctx.companyId : undefined })
   }
