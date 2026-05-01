@@ -1,0 +1,14 @@
+{
+  "name": "time-entry-app",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": ["apps/dashboard", "packages/*"],
+  "scripts": {
+    "dev": "bash scripts/dev.sh",
+    "build": "bash scripts/build.sh",
+    "test:api": "cd apps/api && ./vendor/bin/pest --coverage",
+    "test:dashboard": "npm --workspace apps/dashboard run test",
+    "lint": "npm --workspace apps/dashboard run lint",
+    "typecheck": "npm --workspace apps/dashboard run typecheck"
+  }
+}

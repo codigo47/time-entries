@@ -1,0 +1,40 @@
+# Node
+node_modules/
+.pnpm-store/
+dist/
+.vite/
+
+# PHP
+/apps/api/vendor/
+/apps/api/storage/*.key
+/apps/api/storage/logs/*.log
+/apps/api/storage/framework/cache/*
+/apps/api/storage/framework/sessions/*
+/apps/api/storage/framework/views/*
+/apps/api/storage/framework/testing/*
+/apps/api/bootstrap/cache/*.php
+!/apps/api/bootstrap/cache/.gitkeep
+
+# Env
+.env
+.env.local
+.env.*.local
+apps/api/.env
+apps/dashboard/.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+coverage/
+.phpunit.result.cache
+.phpunit.cache/
+
+# Build
+build/
