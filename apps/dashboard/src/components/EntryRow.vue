@@ -82,14 +82,24 @@ const aiUnmatched = ref<string[]>([])
 
 function onAiApply({ row, unmatched }: { row: PartialDraft; unmatched: string[] }) {
   aiUnmatched.value = unmatched
-  // Suppress the cascading clear watchers when AI provides a complete row
-  if (row.company_id && row.company_id !== props.draft.company_id) {
+  // Suppress the cascading clear watchers — AI provides the full intended row
+  if (row.company_id !== props.draft.company_id) {
     suppressCompanyClear.value = true
   }
-  if (row.project_id && row.project_id !== props.draft.project_id) {
+  if (row.project_id !== props.draft.project_id) {
     suppressProjectClear.value = true
   }
-  emit('update:draft', { ...props.draft, ...row })
+  // Replace the row entirely so stale values from the previous draft don't linger
+  emit('update:draft', {
+    _id: props.draft._id,
+    company_id: row.company_id,
+    employee_id: row.employee_id,
+    project_id: row.project_id,
+    task_id: row.task_id,
+    date: row.date,
+    hours: row.hours,
+    notes: row.notes ?? null,
+  } as TimeEntryDraft)
 }
 
 const labelClass = 'block text-xs text-muted-foreground mb-1'

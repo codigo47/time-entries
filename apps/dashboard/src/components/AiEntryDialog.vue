@@ -89,21 +89,24 @@ async function submit() {
     const projList = cid ? (lookups.projectsByCompany[cid] ?? []) : []
     const taskList = cid ? (lookups.tasksByCompany[cid] ?? []) : []
 
-    // employee
-    if (parsed.employee_id) {
-      if (empList.some((e) => e.id === parsed.employee_id)) {
-        row.employee_id = parsed.employee_id
-      } else {
-        unmatched.push('employee')
-      }
-    }
-
-    // project
+    // project (validate before employee so employee can be checked against project's list)
     if (parsed.project_id) {
       if (projList.some((p) => p.id === parsed.project_id)) {
         row.project_id = parsed.project_id
+        await lookups.loadEmployeesByProject(parsed.project_id)
       } else {
         unmatched.push('project')
+      }
+    }
+
+    // employee (validate against project's employee list if project is set, else company's)
+    if (parsed.employee_id) {
+      const projectEmps = row.project_id ? lookups.employeesByProject[row.project_id] : null
+      const validList = projectEmps ?? empList
+      if (validList.some((e) => e.id === parsed.employee_id)) {
+        row.employee_id = parsed.employee_id
+      } else {
+        unmatched.push('employee')
       }
     }
 

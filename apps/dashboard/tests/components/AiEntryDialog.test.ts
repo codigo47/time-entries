@@ -116,6 +116,7 @@ describe('AiEntryDialog', () => {
     lookups.employeesByCompany = { c1: [{ id: 'e1', name: 'Alice', email: 'a@test.com' }] }
     lookups.projectsByCompany = { c1: [{ id: 'p1', company_id: 'c1', name: 'Alpha' }] }
     lookups.tasksByCompany = { c1: [{ id: 't1', company_id: 'c1', name: 'Dev' }] }
+    lookups.employeesByProject = { p1: [{ id: 'e1', name: 'Alice', email: 'a@test.com' }] }
 
     const rows = [
       { company_id: 'c1', employee_id: 'e1', project_id: 'p1', task_id: 't1', date: '2026-05-01', hours: 4, notes: 'some work' },
@@ -144,6 +145,30 @@ describe('AiEntryDialog', () => {
     // Dialog closes after apply
     const closeEmit = wrapper.emitted('update:modelValue') as boolean[][]
     expect(closeEmit.some((e) => e[0] === false)).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('matches employee against company list when no project is provided', async () => {
+    const lookups = useLookupsStore()
+    lookups.companies = [{ id: 'c1', name: 'Acme' }]
+    lookups.employeesByCompany = { c1: [{ id: 'e1', name: 'Alice', email: 'a@test.com' }] }
+    lookups.projectsByCompany = { c1: [] }
+    lookups.tasksByCompany = { c1: [] }
+
+    const rows = [
+      { company_id: 'c1', employee_id: 'e1', project_id: null, task_id: null, date: '2026-05-01', hours: 4, notes: null },
+    ]
+    mockPost.mockResolvedValueOnce({ data: { rows } } as never)
+
+    const wrapper = mount(AiEntryDialog, { props: { modelValue: true }, attachTo: document.body })
+    await setBodyValue('[data-test="ai-entry-textarea"]', 'Alice worked 4 hours')
+    clickBody('[data-test="ai-entry-submit"]')
+    await new Promise((r) => setTimeout(r, 10))
+
+    const emitted = wrapper.emitted('apply') as Array<[{ row: Record<string, unknown>; unmatched: string[] }]>
+    expect(emitted[0][0].row.employee_id).toBe('e1')
+    expect(emitted[0][0].row.project_id).toBeUndefined()
+    expect(emitted[0][0].unmatched).toEqual([])
     wrapper.unmount()
   })
 

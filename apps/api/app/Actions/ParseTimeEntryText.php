@@ -72,9 +72,13 @@ PROMPT],
 
         return [
             'company_id' => $company?->id,
+            'company_name' => $company?->name ?? ($row['company_name'] ?? null) ?: null,
             'employee_id' => $employee?->id,
+            'employee_name' => $employee?->name ?? ($row['employee_name'] ?? null) ?: null,
             'project_id' => $project?->id,
+            'project_name' => $project?->name ?? ($row['project_name'] ?? null) ?: null,
             'task_id' => $task?->id,
+            'task_name' => $task?->name ?? ($row['task_name'] ?? null) ?: null,
             'date' => $row['date'] ?? null,
             'hours' => $row['hours'] ?? null,
             'notes' => $row['notes'] ?? null,
