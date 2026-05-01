@@ -61,9 +61,8 @@ composer install
 
 ### 5. Generate the Laravel app key
 
-From `apps/api`:
-
 ```bash
+cd apps/api
 php artisan key:generate
 ```
 
@@ -78,10 +77,8 @@ Used by Vite.
 
 ### 7. Install frontend dependencies
 
-From the repository root:
-
 ```bash
-cd /path/to/repo-root
+cd ../..
 npm install
 ```
 
@@ -89,7 +86,7 @@ npm install
 
 Open four terminals and run the commands below, **in this order**.
 
-**Terminal 1 — Postgres** (from the repo root)
+**Terminal 1 — Postgres**
 
 ```bash
 docker compose up
@@ -109,7 +106,7 @@ cd apps/api
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
-**Terminal 4 — Frontend (dashboard)** (from the repo root)
+**Terminal 4 — Frontend (dashboard)**
 
 ```bash
 npm --workspace apps/dashboard run dev
