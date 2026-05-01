@@ -108,24 +108,6 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
         />
       </div>
 
-      <!-- Employee -->
-      <div>
-        <label :class="labelClass">Employee</label>
-        <select
-          data-test="employee-select"
-          :value="draft.employee_id"
-          :disabled="!draft.company_id"
-          :class="[selectClass, err('employee_id') ? 'border-destructive' : '']"
-          @change="set('employee_id', ($event.target as HTMLSelectElement).value)"
-        >
-          <option value="">Select...</option>
-          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
-        </select>
-        <p v-if="err('employee_id')" class="text-xs text-destructive mt-1" data-test="err-employee_id">
-          {{ err('employee_id') }}
-        </p>
-      </div>
-
       <!-- Project -->
       <div>
         <label :class="labelClass">Project</label>
@@ -141,6 +123,24 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
         </select>
         <p v-if="err('project_id')" class="text-xs text-destructive mt-1" data-test="err-project_id">
           {{ err('project_id') }}
+        </p>
+      </div>
+
+      <!-- Employee -->
+      <div>
+        <label :class="labelClass">Employee</label>
+        <select
+          data-test="employee-select"
+          :value="draft.employee_id"
+          :disabled="!draft.company_id"
+          :class="[selectClass, err('employee_id') ? 'border-destructive' : '']"
+          @change="set('employee_id', ($event.target as HTMLSelectElement).value)"
+        >
+          <option value="">Select...</option>
+          <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
+        </select>
+        <p v-if="err('employee_id')" class="text-xs text-destructive mt-1" data-test="err-employee_id">
+          {{ err('employee_id') }}
         </p>
       </div>
     </div>
