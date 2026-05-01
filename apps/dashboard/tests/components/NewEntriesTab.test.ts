@@ -171,6 +171,64 @@ describe('NewEntriesTab', () => {
     expect(wrapper.find('[data-test="banner"]').text()).toContain('Fix highlighted issues and try again.')
   })
 
+  it('shows descriptive duplicate banner when two draft rows are identical', async () => {
+    const drafts = useDraftEntriesStore()
+    const row = {
+      _id: 'r1',
+      company_id: '11111111-1111-7111-8111-111111111111',
+      employee_id: '22222222-2222-7222-8222-222222222222',
+      project_id: '33333333-3333-7333-8333-333333333333',
+      task_id: '44444444-4444-7444-8444-444444444444',
+      date: '2026-05-01',
+      hours: 4,
+      notes: null,
+    }
+    drafts.rows = [row, { ...row, _id: 'r2' }]
+
+    const wrapper = mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 10))
+
+    await wrapper.find('[data-test="submit"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[data-test="banner"]').text()).toContain(
+      'You cannot create a duplicate time entry with the same company, employee, project, task, and date.',
+    )
+  })
+
+  it('shows descriptive duplicate banner when server returns "already exists" error', async () => {
+    const drafts = useDraftEntriesStore()
+    const validRow = {
+      _id: 'r1',
+      company_id: '11111111-1111-7111-8111-111111111111',
+      employee_id: '22222222-2222-7222-8222-222222222222',
+      project_id: '33333333-3333-7333-8333-333333333333',
+      task_id: '44444444-4444-7444-8444-444444444444',
+      date: '2026-05-01',
+      hours: 8,
+      notes: null,
+    }
+    drafts.rows = [validRow]
+
+    mockPost.mockRejectedValueOnce(new Error('Server error'))
+    mockFieldErrors.mockReturnValueOnce({
+      'entries.0.date': ['An entry already exists for this combination.'],
+    })
+
+    const wrapper = mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 10))
+
+    await wrapper.find('[data-test="submit"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 20))
+
+    expect(wrapper.find('[data-test="banner"]').text()).toContain(
+      'You cannot create a duplicate time entry with the same company, employee, project, task, and date.',
+    )
+  })
+
   it('add-row event from footer adds a row', async () => {
     const drafts = useDraftEntriesStore()
     drafts.addRow()

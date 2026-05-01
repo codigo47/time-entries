@@ -77,8 +77,20 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
       </span>
     </div>
 
-    <!-- Line 1: Company · Date · Employee · Project -->
+    <!-- Line 1: Date · Company · Project · Employee -->
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <!-- Date -->
+      <div>
+        <label :class="labelClass">Date</label>
+        <input
+          data-test="date-input"
+          type="date"
+          :value="draft.date"
+          :class="inputClass"
+          @input="set('date', ($event.target as HTMLInputElement).value)"
+        />
+      </div>
+
       <!-- Company -->
       <div>
         <label :class="labelClass">Company</label>
@@ -94,18 +106,6 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
         <p v-if="err('company_id')" class="text-xs text-destructive mt-1" data-test="err-company_id">
           {{ err('company_id') }}
         </p>
-      </div>
-
-      <!-- Date -->
-      <div>
-        <label :class="labelClass">Date</label>
-        <input
-          data-test="date-input"
-          type="date"
-          :value="draft.date"
-          :class="inputClass"
-          @input="set('date', ($event.target as HTMLInputElement).value)"
-        />
       </div>
 
       <!-- Project -->

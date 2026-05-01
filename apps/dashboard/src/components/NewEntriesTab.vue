@@ -29,6 +29,14 @@ onMounted(async () => {
   }
 })
 
+const DUPLICATE_BANNER = 'You cannot create a duplicate time entry with the same company, employee, project, task, and date.'
+
+function hasDuplicateError(map: Record<number, Record<string, string[]>>): boolean {
+  return Object.values(map).some((row) =>
+    Object.values(row).some((msgs) => msgs.some((m) => /duplicate|already exists/i.test(m))),
+  )
+}
+
 function localValidate(): boolean {
   errorsByRow.value = {}
   let ok = true
@@ -45,10 +53,25 @@ function localValidate(): boolean {
     }
   })
 
-  // cross-row: same employee+date with different project
+  // cross-row: exact duplicate (company + employee + project + task + date)
+  const exactDupSeen = new Map<string, number>()
+  drafts.rows.forEach((row, i) => {
+    if (!row.company_id || !row.employee_id || !row.project_id || !row.task_id || !row.date) return
+    const key = [row.company_id, row.employee_id, row.project_id, row.task_id, row.date].join('|')
+    const firstIdx = exactDupSeen.get(key)
+    if (firstIdx !== undefined) {
+      ok = false
+      ;(errorsByRow.value[i] ??= {}).date = [DUPLICATE_BANNER]
+    } else {
+      exactDupSeen.set(key, i)
+    }
+  })
+
+  // cross-row: same employee+date with different project (only flag rows that aren't already exact-dup flagged)
   const seen = new Map<string, { idx: number; project: string }>()
   drafts.rows.forEach((row, i) => {
     if (!row.employee_id || !row.date || !row.project_id) return
+    if (errorsByRow.value[i]?.date?.includes(DUPLICATE_BANNER)) return
     const key = row.employee_id + '|' + row.date
     const existing = seen.get(key)
     if (existing && existing.project !== row.project_id) {
@@ -65,7 +88,9 @@ function localValidate(): boolean {
 async function submit() {
   banner.value = null
   if (!localValidate()) {
-    banner.value = 'Fix highlighted issues and try again.'
+    banner.value = hasDuplicateError(errorsByRow.value)
+      ? DUPLICATE_BANNER
+      : 'Fix highlighted issues and try again.'
     return
   }
   try {
@@ -84,7 +109,9 @@ async function submit() {
       }
     }
     errorsByRow.value = grouped
-    banner.value = 'Server rejected one or more rows.'
+    banner.value = hasDuplicateError(grouped)
+      ? DUPLICATE_BANNER
+      : 'Server rejected one or more rows.'
   }
 }
 
