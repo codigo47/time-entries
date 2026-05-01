@@ -11,16 +11,48 @@ A Laravel 12 REST API + Vue 3 SPA for recording employee time entries. See `READ
 
 ## Setup
 
+### 1. Copy environment files
+
 ```bash
 cp .env.example .env
 cp apps/api/.env.example apps/api/.env
 cp apps/dashboard/.env.example apps/dashboard/.env
-bash scripts/dev.sh
 ```
 
-`scripts/dev.sh` brings up Postgres on port 5477, installs dependencies for both apps, and runs migrations + seeders.
+### 2. Start Postgres (Docker)
+
+The database runs in Docker on port **5477**. Bring it up before anything else:
+
+```bash
+docker compose up -d
+```
+
+Verify it's healthy:
+
+```bash
+docker compose ps
+# postgres should show "Up (healthy)"
+```
+
+To stop it later: `docker compose down` (data persists in the named volume) or `docker compose down -v` (wipes data).
+
+### 3. Install dependencies and run migrations + seeders
+
+You can do steps 2 and 3 in one shot with `bash scripts/dev.sh`, or run them manually:
+
+```bash
+# Backend
+(cd apps/api && composer install && php artisan migrate:fresh --seed)
+
+# Frontend
+npm install
+```
+
+`scripts/dev.sh` automates: docker compose up + composer install + npm install + migrations + seeders.
 
 ## Run (in two terminals)
+
+Make sure Postgres is up (`docker compose up -d`), then:
 
 ```bash
 # Terminal 1 — API
