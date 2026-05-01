@@ -134,7 +134,7 @@ describe('NewEntriesTab', () => {
     await wrapper.vm.$nextTick()
     await new Promise((r) => setTimeout(r, 10))
 
-    expect(wrapper.find('[data-test="banner"]').text()).toContain('Server rejected one or more rows.')
+    expect(wrapper.find('[data-test="banner"]').text()).toContain('Too many hours')
   })
 
   it('detects cross-row conflict: same employee+date, different project', async () => {
@@ -193,7 +193,7 @@ describe('NewEntriesTab', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('[data-test="banner"]').text()).toContain(
-      'You cannot create a duplicate time entry with the same company, employee, project, task, and date.',
+      'You cannot create a duplicate time entry with the same date, company, project, employee, and task.',
     )
   })
 
@@ -225,7 +225,7 @@ describe('NewEntriesTab', () => {
     await new Promise((r) => setTimeout(r, 20))
 
     expect(wrapper.find('[data-test="banner"]').text()).toContain(
-      'You cannot create a duplicate time entry with the same company, employee, project, task, and date.',
+      'An entry already exists for this combination.',
     )
   })
 
@@ -243,6 +243,34 @@ describe('NewEntriesTab', () => {
     await wrapper.vm.$nextTick()
 
     expect(drafts.rows.length).toBe(initialCount + 1)
+  })
+
+  it('falls back to generic banner when server returns no field error messages', async () => {
+    const drafts = useDraftEntriesStore()
+    const validRow = {
+      _id: 'r1',
+      company_id: '11111111-1111-7111-8111-111111111111',
+      employee_id: '22222222-2222-7222-8222-222222222222',
+      project_id: '33333333-3333-7333-8333-333333333333',
+      task_id: '44444444-4444-7444-8444-444444444444',
+      date: '2026-05-01',
+      hours: 8,
+      notes: null,
+    }
+    drafts.rows = [validRow]
+
+    mockPost.mockRejectedValueOnce(new Error('Server error'))
+    mockFieldErrors.mockReturnValueOnce({})
+
+    const wrapper = mount(NewEntriesTab, { global: { stubs: globalStubs } })
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 10))
+
+    await wrapper.find('[data-test="submit"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 20))
+
+    expect(wrapper.find('[data-test="banner"]').text()).toContain('Server rejected one or more rows.')
   })
 
   it('ignores server fieldError keys that do not match entries.<idx>.<field>', async () => {
@@ -278,7 +306,7 @@ describe('NewEntriesTab', () => {
     // defineExpose unwraps refs — vm.errorsByRow gives the plain object directly
     const vm = wrapper.vm as unknown as { errorsByRow: Record<number, Record<string, string[]>> }
     expect(vm.errorsByRow[0]?.hours).toEqual(['Too many hours'])
-    expect(wrapper.find('[data-test="banner"]').text()).toContain('Server rejected one or more rows.')
+    expect(wrapper.find('[data-test="banner"]').text()).toContain('Too many hours')
   })
 
   it('update:draft event on EntryRow stub updates the row', async () => {

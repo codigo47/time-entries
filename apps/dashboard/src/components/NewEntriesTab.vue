@@ -29,7 +29,7 @@ onMounted(async () => {
   }
 })
 
-const DUPLICATE_BANNER = 'You cannot create a duplicate time entry with the same company, employee, project, task, and date.'
+const DUPLICATE_BANNER = 'You cannot create a duplicate time entry with the same date, company, project, employee, and task.'
 
 function hasDuplicateError(map: Record<number, Record<string, string[]>>): boolean {
   return Object.values(map).some((row) =>
@@ -76,7 +76,7 @@ function localValidate(): boolean {
     const existing = seen.get(key)
     if (existing && existing.project !== row.project_id) {
       ok = false
-      ;(errorsByRow.value[i] ??= {}).project_id = ['Conflicts with row ' + (existing.idx + 1) + ' (different project on same day).']
+      ;(errorsByRow.value[i] ??= {}).project_id = ['An employee can only be assigned to one project per date.']
     } else {
       seen.set(key, { idx: i, project: row.project_id })
     }
@@ -101,17 +101,17 @@ async function submit() {
   } catch (e) {
     const errs = fieldErrors(e)
     const grouped: Record<number, Record<string, string[]>> = {}
+    let firstServerMessage: string | null = null
     for (const [k, v] of Object.entries(errs)) {
       const m = k.match(/^entries\.(\d+)\.(.+)$/)
       if (m) {
         const idx = Number(m[1])
         ;(grouped[idx] ??= {})[m[2]] = v
       }
+      if (!firstServerMessage && v.length > 0) firstServerMessage = v[0]
     }
     errorsByRow.value = grouped
-    banner.value = hasDuplicateError(grouped)
-      ? DUPLICATE_BANNER
-      : 'Server rejected one or more rows.'
+    banner.value = firstServerMessage ?? 'Server rejected one or more rows.'
   }
 }
 

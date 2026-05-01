@@ -65,12 +65,7 @@ class UpdateTimeEntry
             }
 
             if ($other->project_id !== $merged['project_id']) {
-                /** @var Project|null $proj */
-                $proj = Project::find($other->project_id);
-                $existingProjectName = $proj instanceof Project ? $proj->name : $other->project_id;
-
-                $errors['project_id'][] = "{$employeeName} already has time entries for project '{$existingProjectName}' on {$merged['date']}. "
-                    .'An employee can only work on one project per day (but multiple tasks within that project).';
+                $errors['project_id'][] = 'An employee can only be assigned to one project per date.';
                 break;
             }
         }
