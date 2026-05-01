@@ -90,12 +90,48 @@ it('DELETE /time-entries/{id} deletes the entry', function () {
     expect(TimeEntry::count())->toBe(0);
 });
 
-it('GET /time-entries/summary returns totals by group', function () {
-    TimeEntry::factory()->count(3)->create(['hours' => 1.0]);
+it('GET /time-entries/summary returns totals by group with group_label for date', function () {
+    TimeEntry::factory()->count(3)->create(['hours' => 1.0, 'date' => '2026-05-01']);
     $response = $this->getJson('/api/v1/time-entries/summary?group_by=date');
     $response->assertOk();
     expect($response->json('meta.group_by'))->toBe('date');
-    expect($response->json('data'))->not->toBeEmpty();
+    $data = $response->json('data');
+    expect($data)->not->toBeEmpty();
+    expect($data[0])->toHaveKey('group_label');
+    expect($data[0]['group_label'])->toBe($data[0]['group_key']);
+});
+
+it('GET /time-entries/summary returns human-readable group_label for employee', function () {
+    TimeEntry::factory()->count(2)->create([
+        'company_id'  => $this->company->id,
+        'employee_id' => $this->employee->id,
+        'project_id'  => $this->project->id,
+        'task_id'     => $this->task->id,
+        'hours'       => 3.0,
+    ]);
+    $response = $this->getJson('/api/v1/time-entries/summary?group_by=employee');
+    $response->assertOk();
+    $data = $response->json('data');
+    expect($data)->not->toBeEmpty();
+    $row = collect($data)->firstWhere('group_key', $this->employee->id);
+    expect($row)->not->toBeNull();
+    expect($row['group_label'])->toBe($this->employee->name);
+});
+
+it('GET /time-entries/summary returns human-readable group_label for company', function () {
+    TimeEntry::factory()->count(2)->create([
+        'company_id'  => $this->company->id,
+        'employee_id' => $this->employee->id,
+        'project_id'  => $this->project->id,
+        'task_id'     => $this->task->id,
+        'hours'       => 2.0,
+    ]);
+    $response = $this->getJson('/api/v1/time-entries/summary?group_by=company');
+    $response->assertOk();
+    $data = $response->json('data');
+    $row = collect($data)->firstWhere('group_key', $this->company->id);
+    expect($row)->not->toBeNull();
+    expect($row['group_label'])->toBe($this->company->name);
 });
 
 it('POST /time-entries/parse returns empty rows when no AI key', function () {

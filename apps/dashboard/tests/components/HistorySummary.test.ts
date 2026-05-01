@@ -40,24 +40,41 @@ describe('HistorySummary', () => {
     expect(wrapper.find('[data-test="summary-empty"]').exists()).toBe(true)
   })
 
-  it('renders summary rows when data is available', async () => {
+  it('renders summary rows when data is available and displays group_label', async () => {
     const history = useHistoryStore()
     mockGet.mockResolvedValueOnce({ data: { data: [
-      { group_key: 'Acme', total_hours: 40, entry_count: 5 },
+      { group_key: '01919b3d-0000-0000-0000-000000000001', group_label: 'Athena Pallas', total_hours: 40, entry_count: 5 },
     ] } } as never)
 
     const wrapper = mount(HistorySummary)
     await new Promise((r) => setTimeout(r, 10))
     // Seed store manually for rendering
-    history.summary = [{ group_key: 'Acme', total_hours: 40, entry_count: 5 }]
+    history.summary = [{ group_key: '01919b3d-0000-0000-0000-000000000001', group_label: 'Athena Pallas', total_hours: 40, entry_count: 5 }]
     await wrapper.vm.$nextTick()
 
     expect(wrapper.find('[data-test="summary-empty"]').exists()).toBe(false)
     const rows = wrapper.findAll('[data-test="summary-row"]')
     expect(rows.length).toBe(1)
-    expect(rows[0].text()).toContain('Acme')
+    expect(rows[0].text()).toContain('Athena Pallas')
+    expect(rows[0].text()).not.toContain('01919b3d-0000-0000-0000-000000000001')
     expect(rows[0].text()).toContain('40.00')
     expect(rows[0].text()).toContain('5')
+  })
+
+  it('falls back to group_key when group_label is absent', async () => {
+    const history = useHistoryStore()
+    mockGet.mockResolvedValueOnce({ data: { data: [
+      { group_key: '2026-05-01', total_hours: 8, entry_count: 1 },
+    ] } } as never)
+
+    const wrapper = mount(HistorySummary)
+    await new Promise((r) => setTimeout(r, 10))
+    history.summary = [{ group_key: '2026-05-01', total_hours: 8, entry_count: 1 }]
+    await wrapper.vm.$nextTick()
+
+    const rows = wrapper.findAll('[data-test="summary-row"]')
+    expect(rows.length).toBe(1)
+    expect(rows[0].text()).toContain('2026-05-01')
   })
 
   it('reloads summary when groupBy changes', async () => {

@@ -12,6 +12,10 @@ use App\Http\Requests\ParseTimeEntryRequest;
 use App\Http\Requests\StoreTimeEntryRequest;
 use App\Http\Requests\UpdateTimeEntryRequest;
 use App\Http\Resources\TimeEntryResource;
+use App\Models\Company;
+use App\Models\Employee;
+use App\Models\Project;
+use App\Models\Task;
 use App\Models\TimeEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -111,7 +115,33 @@ class TimeEntryController extends Controller
             ->groupBy($col)
             ->orderBy('group_key');
 
-        return response()->json(['data' => $query->get(), 'meta' => ['group_by' => $groupBy]]);
+        /** @var \Illuminate\Support\Collection<int, \stdClass> $rows */
+        $rows = $query->get()->map(fn ($row) => (object) $row->getAttributes());
+
+        if ($groupBy !== 'date') {
+            $ids = $rows->pluck('group_key')->filter()->values()->all();
+            $labels = match ($groupBy) {
+                'employee' => Employee::whereIn('id', $ids)->pluck('name', 'id'),
+                'project'  => Project::whereIn('id', $ids)->pluck('name', 'id'),
+                'task'     => Task::whereIn('id', $ids)->pluck('name', 'id'),
+                default    => Company::whereIn('id', $ids)->pluck('name', 'id'),
+            };
+            $rows = $rows->map(fn (\stdClass $row) => [
+                'group_key'   => $row->group_key,
+                'group_label' => $labels[$row->group_key] ?? $row->group_key,
+                'total_hours' => $row->total_hours,
+                'entry_count' => $row->entry_count,
+            ]);
+        } else {
+            $rows = $rows->map(fn (\stdClass $row) => [
+                'group_key'   => $row->group_key,
+                'group_label' => $row->group_key,
+                'total_hours' => $row->total_hours,
+                'entry_count' => $row->entry_count,
+            ]);
+        }
+
+        return response()->json(['data' => $rows, 'meta' => ['group_by' => $groupBy]]);
     }
 
     public function parse(ParseTimeEntryRequest $request, ParseTimeEntryText $action): JsonResponse

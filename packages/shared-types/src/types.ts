@@ -22,6 +22,13 @@ export interface TimeEntryDto {
   updated_at?: string
 }
 
+export interface SummaryRow {
+  group_key: string
+  group_label?: string
+  total_hours: number
+  entry_count: number
+}
+
 export interface PaginatedResponse<T> {
   data: T[]
   meta: { current_page: number; last_page: number; per_page: number; total: number }

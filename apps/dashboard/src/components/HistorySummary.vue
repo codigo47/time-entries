@@ -52,7 +52,7 @@ watch(groupBy, (v) => {
       </thead>
       <tbody>
         <tr v-for="row in history.summary" :key="row.group_key" data-test="summary-row">
-          <td>{{ row.group_key }}</td>
+          <td>{{ row.group_label ?? row.group_key }}</td>
           <td>{{ Number(row.total_hours).toFixed(2) }}</td>
           <td>{{ row.entry_count }}</td>
         </tr>

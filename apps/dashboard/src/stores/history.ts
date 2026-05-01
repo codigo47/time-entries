@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { api } from '@/services/api'
-import type { PaginatedResponse, TimeEntryDto } from '@shared/types'
+import type { PaginatedResponse, SummaryRow, TimeEntryDto } from '@shared/types'
 
 interface Filters {
   company_id?: string
@@ -17,9 +17,9 @@ interface Filters {
 
 export const useHistoryStore = defineStore('history', () => {
   const items = ref<TimeEntryDto[]>([])
-  const meta = ref({ current_page: 1, last_page: 1, per_page: 25, total: 0 })
-  const filters = ref<Filters>({ per_page: 25, sort: '-date' })
-  const summary = ref<Array<{ group_key: string; total_hours: number; entry_count: number }>>([])
+  const meta = ref({ current_page: 1, last_page: 1, per_page: 10, total: 0 })
+  const filters = ref<Filters>({ per_page: 10, sort: '-date' })
+  const summary = ref<SummaryRow[]>([])
 
   async function load() {
     const { data } = await api.get<PaginatedResponse<TimeEntryDto>>('/time-entries', { params: filters.value })
