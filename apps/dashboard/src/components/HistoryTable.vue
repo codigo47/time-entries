@@ -190,41 +190,64 @@ defineExpose({ saveEdit, editItem, editError, actionError })
       No entries found.
     </div>
 
-    <!-- History cards -->
-    <div class="space-y-2">
-      <div
-        v-for="item in history.items"
-        :key="item.id"
-        data-test="history-row"
-        data-test-card="history-card"
-        class="rounded-lg border border-border bg-card px-4 py-3"
-      >
-        <!-- Line 1: compact inline fields with right-aligned edit icon -->
-        <div class="flex items-center gap-3">
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground flex-1 min-w-0">
-            <span class="font-medium">{{ formatDateMDY(item.date) }}</span>
-            <span class="text-muted-foreground">·</span>
-            <span>{{ item.employee?.name ?? item.employee_id }}</span>
-            <span class="text-muted-foreground">·</span>
-            <span>{{ item.project?.name ?? item.project_id }}</span>
-            <span class="text-muted-foreground">·</span>
-            <span>{{ item.task?.name ?? item.task_id }}</span>
-            <span class="text-muted-foreground">·</span>
-            <span class="font-medium">{{ item.hours }} h</span>
-          </div>
-          <button
-            data-test="edit-btn"
-            aria-label="Edit entry"
-            title="Edit entry"
-            class="inline-flex items-center justify-center size-9 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity shrink-0"
-            @click="startEdit(item)"
-          >
-            <Pencil class="size-4" />
-          </button>
-        </div>
-        <!-- Line 2: notes (only if present) -->
-        <p v-if="item.notes" class="text-xs italic text-muted-foreground mt-1">{{ item.notes }}</p>
-      </div>
+    <!-- History table -->
+    <div
+      v-if="history.items.length > 0"
+      class="border border-border rounded-lg overflow-x-auto"
+    >
+      <table class="w-full text-sm" style="border-collapse: collapse;">
+        <thead>
+          <tr class="bg-muted">
+            <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Date</th>
+            <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Company</th>
+            <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Project</th>
+            <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Employee</th>
+            <th class="px-3 py-2 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Task</th>
+            <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border">Hours</th>
+            <th class="px-3 py-2 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border w-12"></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template v-for="item in history.items" :key="item.id">
+            <tr
+              data-test="history-row"
+              class="hover:bg-muted/40 transition-colors"
+            >
+              <td class="px-3 py-2 border-b border-border">{{ formatDateMDY(item.date) }}</td>
+              <td class="px-3 py-2 border-b border-border">{{ item.company?.name ?? item.company_id }}</td>
+              <td class="px-3 py-2 border-b border-border">{{ item.project?.name ?? item.project_id }}</td>
+              <td class="px-3 py-2 border-b border-border">{{ item.employee?.name ?? item.employee_id }}</td>
+              <td class="px-3 py-2 border-b border-border">{{ item.task?.name ?? item.task_id }}</td>
+              <td class="px-3 py-2 text-right font-medium border-b border-border">{{ item.hours }} h</td>
+              <td class="px-3 py-2 text-right border-b border-border">
+                <button
+                  data-test="edit-btn"
+                  aria-label="Edit entry"
+                  title="Edit entry"
+                  class="inline-flex items-center justify-center size-9 rounded-md bg-primary text-primary-foreground border-none cursor-pointer hover:opacity-90 transition-opacity"
+                  @click="startEdit(item)"
+                >
+                  <Pencil class="size-4" />
+                </button>
+              </td>
+            </tr>
+            <tr
+              v-if="item.notes"
+              data-test="history-notes-row"
+              class="bg-muted/30"
+            >
+              <th
+                scope="row"
+                class="px-3 py-1.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground border-b border-border"
+              >Notes</th>
+              <td
+                colspan="6"
+                class="px-3 py-1.5 text-xs italic text-muted-foreground border-b border-border"
+              >{{ item.notes }}</td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
     </div>
 
     <!-- Pagination -->

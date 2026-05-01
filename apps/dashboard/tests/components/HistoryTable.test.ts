@@ -56,7 +56,7 @@ describe('HistoryTable', () => {
     expect(wrapper.text()).toContain('No entries found.')
   })
 
-  it('renders cards for each item', () => {
+  it('renders rows for each item', () => {
     const history = useHistoryStore()
     history.items = [sampleItem]
     history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
@@ -68,6 +68,40 @@ describe('HistoryTable', () => {
     expect(wrapper.text()).toContain('Test note')
     // date is formatted as mm/dd/yyyy
     expect(wrapper.text()).toContain('05/01/2026')
+  })
+
+  it('renders table headers', () => {
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+    const headers = wrapper.findAll('thead th')
+    const headerTexts = headers.map((h) => h.text())
+    expect(headerTexts).toContain('Date')
+    expect(headerTexts).toContain('Company')
+    expect(headerTexts).toContain('Project')
+    expect(headerTexts).toContain('Employee')
+    expect(headerTexts).toContain('Task')
+    expect(headerTexts).toContain('Hours')
+  })
+
+  it('renders inverted notes row when notes are present', () => {
+    const history = useHistoryStore()
+    history.items = [sampleItem]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+    const notesRow = wrapper.find('[data-test="history-notes-row"]')
+    expect(notesRow.exists()).toBe(true)
+    expect(notesRow.text()).toContain('Notes')
+    expect(notesRow.text()).toContain('Test note')
+  })
+
+  it('does not render notes row when notes are null', () => {
+    const history = useHistoryStore()
+    history.items = [{ ...sampleItem, notes: null }]
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 1 }
+    const wrapper = mount(HistoryTable)
+    expect(wrapper.find('[data-test="history-notes-row"]').exists()).toBe(false)
   })
 
   it('falls back to IDs when relation names are missing', () => {
