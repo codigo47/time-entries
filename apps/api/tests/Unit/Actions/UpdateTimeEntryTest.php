@@ -32,6 +32,28 @@ it('updates editable fields', function () {
     expect($updated->notes)->toBe('Refactor');
 });
 
+it('rejects an update that would create an exact duplicate (same company, employee, project, task, date)', function () {
+    $task2 = Task::factory()->for($this->company)->create();
+    $secondEntry = TimeEntry::create([
+        'company_id' => $this->company->id,
+        'employee_id' => $this->employee->id,
+        'project_id' => $this->project->id,
+        'task_id' => $task2->id,
+        'date' => '2026-05-01',
+        'hours' => 2.0,
+    ]);
+
+    $action = app(UpdateTimeEntry::class);
+    try {
+        // Try to change secondEntry's task to match the first entry exactly
+        $action->execute($secondEntry, ['task_id' => $this->task->id]);
+        $this->fail('expected exception');
+    } catch (TimeEntryValidationException $e) {
+        expect($e->errors)->toHaveKey('date');
+        expect($e->errors['date'][0])->toContain('already exists');
+    }
+});
+
 it('rejects an update that would conflict with the per-day-project rule', function () {
     $other = Project::factory()->for($this->company)->create();
     $this->employee->projects()->attach($other);

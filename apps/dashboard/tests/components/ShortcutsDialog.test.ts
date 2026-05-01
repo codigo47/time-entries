@@ -26,6 +26,12 @@ describe('ShortcutsDialog', () => {
   it('renders correct number of shortcut items', () => {
     const wrapper = mount(ShortcutsDialog)
     const items = wrapper.findAll('li')
-    expect(items.length).toBe(7)
+    expect(items.length).toBe(9)
+  })
+
+  it('shows Ctrl/Cmd+3 summary tab shortcut', () => {
+    const wrapper = mount(ShortcutsDialog)
+    expect(wrapper.text()).toContain('Ctrl/Cmd + 3')
+    expect(wrapper.text()).toContain('Summary tab')
   })
 })

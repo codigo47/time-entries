@@ -17,8 +17,13 @@ const emit = defineEmits<{
 
 const lookups = useLookupsStore()
 
-const employees = computed(() =>
-  props.draft.company_id ? lookups.employeesByCompany[props.draft.company_id] ?? [] : [])
+const employees = computed(() => {
+  const projectId = props.draft.project_id
+  const companyId = props.draft.company_id
+  if (projectId) return lookups.employeesByProject[projectId] ?? []
+  if (companyId) return lookups.employeesByCompany[companyId] ?? []
+  return []
+})
 const projects = computed(() =>
   props.draft.company_id ? lookups.projectsByCompany[props.draft.company_id] ?? [] : [])
 const tasks = computed(() =>
@@ -36,6 +41,15 @@ watch(() => props.draft.company_id, async (id) => {
   ])
   // clear dependent fields when company changes
   emit('update:draft', { ...props.draft, employee_id: undefined, project_id: undefined, task_id: undefined })
+})
+
+watch(() => props.draft.project_id, async (projectId) => {
+  if (!projectId) return
+  await lookups.loadEmployeesByProject(projectId)
+  // If current employee_id is not in the filtered list, clear it
+  if (props.draft.employee_id && !employees.value.some(e => e.id === props.draft.employee_id)) {
+    emit('update:draft', { ...props.draft, employee_id: undefined })
+  }
 })
 
 function set<K extends keyof TimeEntryDraft>(key: K, value: TimeEntryDraft[K]) {
@@ -74,7 +88,7 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
           :class="[selectClass, err('company_id') ? 'border-destructive' : '']"
           @change="set('company_id', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="">Select…</option>
+          <option value="">Select...</option>
           <option v-for="c in lookups.companies" :key="c.id" :value="c.id">{{ c.name }}</option>
         </select>
         <p v-if="err('company_id')" class="text-xs text-destructive mt-1" data-test="err-company_id">
@@ -104,7 +118,7 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
           :class="[selectClass, err('employee_id') ? 'border-destructive' : '']"
           @change="set('employee_id', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="">Select…</option>
+          <option value="">Select...</option>
           <option v-for="e in employees" :key="e.id" :value="e.id">{{ e.name }}</option>
         </select>
         <p v-if="err('employee_id')" class="text-xs text-destructive mt-1" data-test="err-employee_id">
@@ -122,7 +136,7 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
           :class="[selectClass, err('project_id') ? 'border-destructive' : '']"
           @change="set('project_id', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="">Select…</option>
+          <option value="">Select...</option>
           <option v-for="p in projects" :key="p.id" :value="p.id">{{ p.name }}</option>
         </select>
         <p v-if="err('project_id')" class="text-xs text-destructive mt-1" data-test="err-project_id">
@@ -131,8 +145,8 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
       </div>
     </div>
 
-    <!-- Line 2: Task · Hours · Notes · Actions -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-[1fr_120px_1fr_auto] gap-4 items-end">
+    <!-- Line 2: Task · Hours · Notes -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
       <!-- Task -->
       <div>
         <label :class="labelClass">Task</label>
@@ -143,7 +157,7 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
           :class="[selectClass, err('task_id') ? 'border-destructive' : '']"
           @change="set('task_id', ($event.target as HTMLSelectElement).value)"
         >
-          <option value="">Select…</option>
+          <option value="">Select...</option>
           <option v-for="t in tasks" :key="t.id" :value="t.id">{{ t.name }}</option>
         </select>
         <p v-if="err('task_id')" class="text-xs text-destructive mt-1" data-test="err-task_id">
@@ -181,28 +195,30 @@ const selectClass = 'w-full bg-background border border-border rounded px-2 py-1
           @input="set('notes', ($event.target as HTMLInputElement).value)"
         />
       </div>
+    </div>
 
-      <!-- Actions -->
-      <div class="flex items-center gap-1 justify-end">
-        <button
-          data-test="duplicate-btn"
-          aria-label="Duplicate row"
-          title="Duplicate row"
-          class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted border-none bg-transparent cursor-pointer transition-colors"
-          @click="emit('duplicate')"
-        >
-          <Copy class="size-4" />
-        </button>
-        <button
-          data-test="remove-btn"
-          aria-label="Remove row"
-          title="Remove row"
-          class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-none bg-transparent cursor-pointer transition-colors"
-          @click="emit('remove')"
-        >
-          <Trash2 class="size-4" />
-        </button>
-      </div>
+    <!-- Line 3: Action row — centered -->
+    <div class="flex justify-center gap-3">
+      <button
+        data-test="duplicate-btn"
+        aria-label="Duplicate row"
+        title="Duplicate row"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+        @click="emit('duplicate')"
+      >
+        <Copy class="size-4" />
+        Duplicate
+      </button>
+      <button
+        data-test="remove-btn"
+        aria-label="Remove row"
+        title="Remove row"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+        @click="emit('remove')"
+      >
+        <Trash2 class="size-4" />
+        Remove
+      </button>
     </div>
   </div>
 </template>

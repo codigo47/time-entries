@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import NewEntriesTab from '@/components/NewEntriesTab.vue'
 import HistoryTab from '@/components/HistoryTab.vue'
+import HistorySummary from '@/components/HistorySummary.vue'
 import ShortcutsDialog from '@/components/ShortcutsDialog.vue'
 
 const route = useRoute()
@@ -13,7 +14,11 @@ const router = useRouter()
 const showShortcuts = ref(false)
 
 const tab = computed({
-  get: () => (route.query.tab === 'history' ? 'history' : 'new'),
+  get: () => {
+    const t = route.query.tab
+    if (t === 'history' || t === 'summary') return t
+    return 'new'
+  },
   set: (v) => router.replace({ query: { ...route.query, tab: v } }),
 })
 
@@ -25,6 +30,9 @@ useKeyboardShortcuts([
   { combo: 'ctrl+2', handler: () => { tab.value = 'history' } },
   /* v8 ignore next */
   { combo: 'cmd+2', handler: () => { tab.value = 'history' } },
+  { combo: 'ctrl+3', handler: () => { tab.value = 'summary' } },
+  /* v8 ignore next */
+  { combo: 'cmd+3', handler: () => { tab.value = 'summary' } },
 ])
 </script>
 
@@ -45,12 +53,18 @@ useKeyboardShortcuts([
         <TabsTrigger value="history">
           History
         </TabsTrigger>
+        <TabsTrigger value="summary">
+          Summary
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="new" class="mt-0">
         <NewEntriesTab />
       </TabsContent>
       <TabsContent value="history" class="mt-0">
         <HistoryTab />
+      </TabsContent>
+      <TabsContent value="summary" class="mt-0">
+        <HistorySummary />
       </TabsContent>
     </Tabs>
   </div>

@@ -14,7 +14,6 @@ vi.mock('@/services/api', () => ({
 
 import { api } from '@/services/api'
 import { useHistoryStore } from '@/stores/history'
-import { useCompanyContextStore } from '@/stores/companyContext'
 import HistoryTab from '@/components/HistoryTab.vue'
 
 const mockGet = vi.mocked(api.get)
@@ -22,7 +21,6 @@ const mockGet = vi.mocked(api.get)
 const globalStubs = {
   HistoryFilters: { template: '<div data-test="history-filters-stub" />' },
   HistoryTable: { template: '<div data-test="history-table-stub" />' },
-  HistorySummary: { template: '<div data-test="history-summary-stub" />' },
 }
 
 function mockLoadResponse() {
@@ -52,38 +50,15 @@ describe('HistoryTab', () => {
     const wrapper = mount(HistoryTab, { global: { stubs: globalStubs } })
     expect(wrapper.find('[data-test="history-filters-stub"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="history-table-stub"]').exists()).toBe(true)
-    expect(wrapper.find('[data-test="history-summary-stub"]').exists()).toBe(true)
   })
 
-  it('reloads when companyId changes in context store', async () => {
+  it('does not sync companyId from context into history filters', async () => {
     mockLoadResponse()
     mount(HistoryTab, { global: { stubs: globalStubs } })
-    await new Promise((r) => setTimeout(r, 10))
-    vi.clearAllMocks()
-    mockLoadResponse()
-
-    const ctx = useCompanyContextStore()
-    ctx.companyId = 'c1'
-    await new Promise((r) => setTimeout(r, 10))
-
-    expect(mockGet).toHaveBeenCalledWith('/time-entries', expect.objectContaining({
-      params: expect.objectContaining({ company_id: 'c1' }),
-    }))
-  })
-
-  it('sets company_id filter to undefined when companyId is all', async () => {
-    mockLoadResponse()
-    const ctx = useCompanyContextStore()
-    ctx.companyId = 'c1'
-    mount(HistoryTab, { global: { stubs: globalStubs } })
-    await new Promise((r) => setTimeout(r, 10))
-    vi.clearAllMocks()
-    mockLoadResponse()
-
-    ctx.companyId = 'all'
     await new Promise((r) => setTimeout(r, 10))
 
     const history = useHistoryStore()
+    // company_id filter should remain unset — HistoryFilters owns it
     expect(history.filters.company_id).toBeUndefined()
   })
 })

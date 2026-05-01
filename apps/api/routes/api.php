@@ -10,8 +10,12 @@ Route::get('companies/{company}/employees', [CompanyController::class, 'employee
 Route::get('companies/{company}/projects', [CompanyController::class, 'projects']);
 Route::get('companies/{company}/tasks', [CompanyController::class, 'tasks']);
 
+Route::get('employees', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'index']);
 Route::get('employees/{employee}/projects', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'projects']);
 Route::get('employees/{employee}/companies', [\App\Http\Controllers\Api\V1\EmployeeController::class, 'companies']);
+
+Route::get('projects', [\App\Http\Controllers\Api\V1\ProjectController::class, 'index']);
+Route::get('projects/{project}/employees', [\App\Http\Controllers\Api\V1\ProjectController::class, 'employees']);
 
 Route::get('time-entries', [\App\Http\Controllers\Api\V1\TimeEntryController::class, 'index']);
 Route::get('time-entries/summary', [\App\Http\Controllers\Api\V1\TimeEntryController::class, 'summary']);

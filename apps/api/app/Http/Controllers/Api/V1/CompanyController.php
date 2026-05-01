@@ -69,6 +69,6 @@ class CompanyController extends Controller
             ->response()
             ->setStatusCode(200)
             ->header('ETag', $etag)
-            ->header('Cache-Control', 'private, max-age=60');
+            ->header('Cache-Control', 'private, max-age=1200');
     }
 }

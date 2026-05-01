@@ -132,6 +132,37 @@ it('rejects two different projects within the same batch', function () {
     }
 });
 
+it('rejects an exact duplicate entry (same company, employee, project, task, date)', function () {
+    // First create a valid entry
+    $action = app(CreateTimeEntries::class);
+    $action->execute([[
+        'company_id' => $this->company->id,
+        'employee_id' => $this->employee->id,
+        'project_id' => $this->project->id,
+        'task_id' => $this->task->id,
+        'date' => '2026-05-01',
+        'hours' => 2.0,
+        'notes' => null,
+    ]]);
+
+    // Now try to create the same entry again
+    try {
+        $action->execute([[
+            'company_id' => $this->company->id,
+            'employee_id' => $this->employee->id,
+            'project_id' => $this->project->id,
+            'task_id' => $this->task->id,
+            'date' => '2026-05-01',
+            'hours' => 3.0,
+            'notes' => null,
+        ]]);
+        $this->fail('expected exception');
+    } catch (TimeEntryValidationException $e) {
+        expect($e->errors)->toHaveKey('entries.0.date');
+        expect($e->errors['entries.0.date'][0])->toContain('already exists');
+    }
+});
+
 it('allows multiple tasks for same project, employee, date', function () {
     $task2 = Task::factory()->for($this->company)->create();
     $action = app(CreateTimeEntries::class);

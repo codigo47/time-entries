@@ -18,6 +18,7 @@ import EntriesPage from '@/pages/EntriesPage.vue'
 const globalStubs = {
   NewEntriesTab: { template: '<div data-test="new-entries-tab-stub" />' },
   HistoryTab: { template: '<div data-test="history-tab-stub" />' },
+  HistorySummary: { template: '<div data-test="history-summary-stub" />' },
   ShortcutsDialog: { template: '<div data-test="shortcuts-dialog-stub" />' },
   Tabs: {
     props: ['modelValue'],
@@ -74,6 +75,17 @@ describe('EntriesPage', () => {
     await wrapper.vm.$nextTick()
     const tabs = wrapper.find('[data-test="tabs"]')
     expect(tabs.attributes('data-value')).toBe('history')
+  })
+
+  it('shows summary tab when ?tab=summary', async () => {
+    const router = makeRouter('/entries?tab=summary')
+    await router.isReady()
+    const wrapper = mount(EntriesPage, {
+      global: { plugins: [router], stubs: globalStubs },
+    })
+    await wrapper.vm.$nextTick()
+    const tabs = wrapper.find('[data-test="tabs"]')
+    expect(tabs.attributes('data-value')).toBe('summary')
   })
 
   it('defaults to new tab for unknown tab query value', async () => {
@@ -155,7 +167,7 @@ describe('EntriesPage', () => {
     expect(router.currentRoute.value.query.tab).toBe('history')
   })
 
-  it('renders both tab contents', async () => {
+  it('renders all three tab contents', async () => {
     const router = makeRouter('/entries')
     await router.isReady()
     const wrapper = mount(EntriesPage, {
@@ -165,6 +177,37 @@ describe('EntriesPage', () => {
 
     expect(wrapper.find('[data-content="new"]').exists()).toBe(true)
     expect(wrapper.find('[data-content="history"]').exists()).toBe(true)
+    expect(wrapper.find('[data-content="summary"]').exists()).toBe(true)
+  })
+
+  it('switches to summary tab on Ctrl+3', async () => {
+    const router = makeRouter('/entries')
+    await router.isReady()
+    const wrapper = mount(EntriesPage, {
+      global: { plugins: [router], stubs: globalStubs },
+    })
+    await wrapper.vm.$nextTick()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '3', ctrlKey: true, bubbles: true }))
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(router.currentRoute.value.query.tab).toBe('summary')
+  })
+
+  it('switches to summary tab on Cmd+3 (metaKey)', async () => {
+    const router = makeRouter('/entries')
+    await router.isReady()
+    const wrapper = mount(EntriesPage, {
+      global: { plugins: [router], stubs: globalStubs },
+    })
+    await wrapper.vm.$nextTick()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: '3', metaKey: true, bubbles: true }))
+    await wrapper.vm.$nextTick()
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(router.currentRoute.value.query.tab).toBe('summary')
   })
 
   it('switches to new tab on Cmd+1 (metaKey)', async () => {

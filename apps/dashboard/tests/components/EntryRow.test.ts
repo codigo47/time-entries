@@ -270,4 +270,125 @@ describe('EntryRow', () => {
     // No API calls after clearing mocks — the if(!id) return path was taken
     expect(mockGet).not.toHaveBeenCalled()
   })
+
+  it('calls loadEmployeesByProject when project_id is selected', async () => {
+    mockGet.mockResolvedValue({ data: { data: [] } } as never)
+    const lookups = useLookupsStore()
+    lookups.projectsByCompany = { c1: [{ id: 'p1', company_id: 'c1', name: 'Alpha' }] }
+
+    const draft: TimeEntryDraft = { ...baseDraft, company_id: 'c1' }
+    const wrapper = mount(EntryRow, { props: { draft, rowErrors: {} } })
+
+    // simulate project selection by updating prop
+    await wrapper.setProps({ draft: { ...draft, project_id: 'p1' } })
+    await new Promise((r) => setTimeout(r, 20))
+
+    expect(mockGet).toHaveBeenCalledWith('/projects/p1/employees')
+  })
+
+  it('shows project-filtered employees when project_id is set', () => {
+    const lookups = useLookupsStore()
+    lookups.employeesByProject = {
+      p1: [{ id: 'e2', name: 'ProjectEmployee', email: 'pe@test.com' }],
+    }
+    lookups.employeesByCompany = {
+      c1: [{ id: 'e1', name: 'CompanyEmployee', email: 'ce@test.com' }],
+    }
+    const draft: TimeEntryDraft = { ...baseDraft, company_id: 'c1', project_id: 'p1' }
+    const wrapper = mount(EntryRow, { props: { draft, rowErrors: {} } })
+
+    const empSelect = wrapper.find('[data-test="employee-select"]')
+    expect(empSelect.text()).toContain('ProjectEmployee')
+    expect(empSelect.text()).not.toContain('CompanyEmployee')
+  })
+
+  it('falls back to company employees when no project_id', () => {
+    const lookups = useLookupsStore()
+    lookups.employeesByProject = {}
+    lookups.employeesByCompany = {
+      c1: [{ id: 'e1', name: 'CompanyEmployee', email: 'ce@test.com' }],
+    }
+    const draft: TimeEntryDraft = { ...baseDraft, company_id: 'c1' }
+    const wrapper = mount(EntryRow, { props: { draft, rowErrors: {} } })
+
+    const empSelect = wrapper.find('[data-test="employee-select"]')
+    expect(empSelect.text()).toContain('CompanyEmployee')
+  })
+
+  it('clears employee_id when selected project excludes previously selected employee', async () => {
+    mockGet.mockResolvedValue({ data: { data: [{ id: 'e2', name: 'Bob', email: 'b@test.com' }] } } as never)
+    const lookups = useLookupsStore()
+    lookups.projectsByCompany = { c1: [{ id: 'p1', company_id: 'c1', name: 'Alpha' }] }
+
+    const draft: TimeEntryDraft = {
+      ...baseDraft,
+      company_id: 'c1',
+      employee_id: 'e1', // Alice, not in project p1
+    }
+    const wrapper = mount(EntryRow, { props: { draft, rowErrors: {} } })
+
+    // Change to project p1 — employees for p1 only has e2 (Bob)
+    await wrapper.setProps({ draft: { ...draft, project_id: 'p1' } })
+    await new Promise((r) => setTimeout(r, 30))
+
+    const emitted = wrapper.emitted('update:draft') as TimeEntryDraft[][]
+    expect(emitted).toBeTruthy()
+    const clearEmit = emitted.find((e) => e[0].employee_id === undefined)
+    expect(clearEmit).toBeTruthy()
+  })
+
+  it('does not clear employee_id when project change includes the currently selected employee', async () => {
+    const lookups = useLookupsStore()
+    // Pre-seed employeesByProject so no API call needed
+    lookups.employeesByProject = {
+      p1: [{ id: 'e1', name: 'Alice', email: 'a@test.com' }],
+    }
+    const draft: TimeEntryDraft = {
+      ...baseDraft,
+      company_id: 'c1',
+      employee_id: 'e1', // Alice IS in project p1
+    }
+    const wrapper = mount(EntryRow, { props: { draft, rowErrors: {} } })
+
+    await wrapper.setProps({ draft: { ...draft, project_id: 'p1' } })
+    await new Promise((r) => setTimeout(r, 30))
+
+    const emitted = wrapper.emitted('update:draft') as TimeEntryDraft[][] | undefined
+    // No emit with undefined employee_id should have happened
+    const clearEmit = emitted?.find((e) => e[0].employee_id === undefined)
+    expect(clearEmit).toBeUndefined()
+  })
+
+  it('project watcher skips when project_id changes to falsy', async () => {
+    mockGet.mockResolvedValue({ data: { data: [] } } as never)
+    const draft: TimeEntryDraft = { ...baseDraft, company_id: 'c1', project_id: 'p1' }
+    const lookups = useLookupsStore()
+    lookups.employeesByProject = { p1: [] }
+    const wrapper = mount(EntryRow, { props: { draft, rowErrors: {} } })
+    await new Promise((r) => setTimeout(r, 20))
+    vi.clearAllMocks()
+
+    await wrapper.setProps({ draft: { ...draft, project_id: undefined } })
+    await new Promise((r) => setTimeout(r, 20))
+    expect(mockGet).not.toHaveBeenCalled()
+  })
+
+  it('uses empty list when project employees not yet in store after load', async () => {
+    // API returns empty list → employeesByProject[p1] = [] after load
+    mockGet.mockResolvedValueOnce({ data: { data: [] } } as never)
+    const draft: TimeEntryDraft = {
+      ...baseDraft,
+      company_id: 'c1',
+      employee_id: 'e1',
+    }
+    const wrapper = mount(EntryRow, { props: { draft, rowErrors: {} } })
+    await wrapper.setProps({ draft: { ...draft, project_id: 'p-empty' } })
+    await new Promise((r) => setTimeout(r, 30))
+
+    // employeesByProject['p-empty'] = [] → e1 not in list → clear emitted
+    const emitted = wrapper.emitted('update:draft') as TimeEntryDraft[][]
+    expect(emitted).toBeTruthy()
+    const clearEmit = emitted.find((e) => e[0].employee_id === undefined)
+    expect(clearEmit).toBeTruthy()
+  })
 })

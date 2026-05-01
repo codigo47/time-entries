@@ -101,16 +101,33 @@ class CreateTimeEntries
             }
 
             // Lock and check for "one project per employee per date"
-            $existing = TimeEntry::where('employee_id', $row['employee_id'])
+            $existingEntries = TimeEntry::where('employee_id', $row['employee_id'])
                 ->where('date', $row['date'])
                 ->lockForUpdate()
-                ->first();
-            if ($existing instanceof TimeEntry && $existing->project_id !== $row['project_id']) {
-                /** @var Project|null $existingProject */
-                $existingProject = Project::find($existing->project_id);
-                $existingProjectName = $existingProject instanceof Project ? $existingProject->name : $existing->project_id;
-                $errors["entries.$i.project_id"][] = "{$employeeName} already has time entries for project '{$existingProjectName}' on {$row['date']}. "
-                    .'An employee can only work on one project per day (but multiple tasks within that project).';
+                ->get();
+
+            foreach ($existingEntries as $existing) {
+                // Exact duplicate: same company, employee, project, task, date
+                if (
+                    $existing->company_id === $row['company_id'] &&
+                    $existing->project_id === $row['project_id'] &&
+                    $existing->task_id === $row['task_id']
+                ) {
+                    $taskName = $task instanceof Task ? $task->name : $row['task_id'];
+                    $formattedDate = date('m/d/Y', strtotime($row['date']));
+                    $errors["entries.$i.date"][] = "An entry already exists for {$employeeName} working on '{$taskName}' for project '{$projectName}' on {$formattedDate}. To change the hours or notes, edit the existing entry.";
+                    break;
+                }
+
+                // Different project: one project per day rule
+                if ($existing->project_id !== $row['project_id']) {
+                    /** @var Project|null $existingProject */
+                    $existingProject = Project::find($existing->project_id);
+                    $existingProjectName = $existingProject instanceof Project ? $existingProject->name : $existing->project_id;
+                    $errors["entries.$i.project_id"][] = "{$employeeName} already has time entries for project '{$existingProjectName}' on {$row['date']}. "
+                        .'An employee can only work on one project per day (but multiple tasks within that project).';
+                    break;
+                }
             }
         }
 

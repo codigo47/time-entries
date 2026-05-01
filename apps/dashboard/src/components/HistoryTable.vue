@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { Pencil, Trash2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-vue-next'
 import { useHistoryStore } from '@/stores/history'
 import { api } from '@/services/api'
 import type { TimeEntryDto } from '@shared/types'
+import { formatDateMDY } from '@/utils/format'
 
 const history = useHistoryStore()
 
@@ -79,6 +80,16 @@ function setPerPage(value: number) {
   history.filters.page = 1
   history.load()
 }
+
+function sortIcon(field: string) {
+  const s = history.filters.sort
+  if (s === field) return 'asc'
+  if (s === `-${field}`) return 'desc'
+  return 'none'
+}
+
+const dateSortState = computed(() => sortIcon('date'))
+const hoursSortState = computed(() => sortIcon('hours'))
 
 defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
 </script>
@@ -176,18 +187,33 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
     </div>
 
     <!-- Sort controls -->
-    <div class="flex gap-4 mb-3 text-xs text-muted-foreground">
+    <div class="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
+      <span class="font-medium">Sort:</span>
       <button
-        class="hover:text-foreground transition-colors cursor-pointer bg-transparent border-none"
+        aria-label="Sort by date"
+        :class="[
+          'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs cursor-pointer border-none transition-colors',
+          dateSortState !== 'none' ? 'bg-muted text-foreground font-medium' : 'bg-transparent hover:text-foreground hover:bg-muted/50'
+        ]"
         @click="setSort('date')"
       >
-        Sort by Date
+        <ArrowUp v-if="dateSortState === 'asc'" class="size-3.5" />
+        <ArrowDown v-else-if="dateSortState === 'desc'" class="size-3.5" />
+        <ArrowUpDown v-else class="size-3.5" />
+        Date
       </button>
       <button
-        class="hover:text-foreground transition-colors cursor-pointer bg-transparent border-none"
+        aria-label="Sort by hours"
+        :class="[
+          'inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs cursor-pointer border-none transition-colors',
+          hoursSortState !== 'none' ? 'bg-muted text-foreground font-medium' : 'bg-transparent hover:text-foreground hover:bg-muted/50'
+        ]"
         @click="setSort('hours')"
       >
-        Sort by Hours
+        <ArrowUp v-if="hoursSortState === 'asc'" class="size-3.5" />
+        <ArrowDown v-else-if="hoursSortState === 'desc'" class="size-3.5" />
+        <ArrowUpDown v-else class="size-3.5" />
+        Hours
       </button>
     </div>
 
@@ -200,64 +226,50 @@ defineExpose({ saveEdit, doDelete, editItem, deleteId, actionError })
     </div>
 
     <!-- History cards -->
-    <div class="space-y-3">
+    <div class="space-y-2">
       <div
         v-for="item in history.items"
         :key="item.id"
         data-test="history-row"
         data-test-card="history-card"
-        class="rounded-lg border border-border bg-card p-4"
+        class="rounded-lg border border-border bg-card px-4 py-3"
       >
-        <!-- Line 1: Company · Date · Employee · Project -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-3">
-          <div>
-            <p class="text-xs text-muted-foreground mb-0.5">Date</p>
-            <p class="text-sm font-medium text-foreground">{{ item.date }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground mb-0.5">Employee</p>
-            <p class="text-sm text-foreground">{{ item.employee?.name ?? item.employee_id }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground mb-0.5">Project</p>
-            <p class="text-sm text-foreground">{{ item.project?.name ?? item.project_id }}</p>
-          </div>
-          <div>
-            <p class="text-xs text-muted-foreground mb-0.5">Task</p>
-            <p class="text-sm text-foreground">{{ item.task?.name ?? item.task_id }}</p>
-          </div>
+        <!-- Line 1: compact inline fields -->
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-foreground">
+          <span class="font-medium">{{ formatDateMDY(item.date) }}</span>
+          <span class="text-muted-foreground">·</span>
+          <span>{{ item.employee?.name ?? item.employee_id }}</span>
+          <span class="text-muted-foreground">·</span>
+          <span>{{ item.project?.name ?? item.project_id }}</span>
+          <span class="text-muted-foreground">·</span>
+          <span>{{ item.task?.name ?? item.task_id }}</span>
+          <span class="text-muted-foreground">·</span>
+          <span class="font-medium">{{ item.hours }} h</span>
         </div>
-
-        <!-- Line 2: Hours · Notes · Actions -->
-        <div class="flex flex-wrap items-end gap-4">
-          <div class="min-w-[80px]">
-            <p class="text-xs text-muted-foreground mb-0.5">Hours</p>
-            <p class="text-sm font-medium text-foreground text-right">{{ item.hours }}</p>
-          </div>
-          <div class="flex-1">
-            <p class="text-xs text-muted-foreground mb-0.5">Notes</p>
-            <p class="text-sm text-foreground">{{ item.notes ?? '—' }}</p>
-          </div>
-          <div class="flex items-center gap-1 ml-auto">
-            <button
-              data-test="edit-btn"
-              aria-label="Edit entry"
-              title="Edit entry"
-              class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted border-none bg-transparent cursor-pointer transition-colors"
-              @click="startEdit(item)"
-            >
-              <Pencil class="size-4" />
-            </button>
-            <button
-              data-test="delete-btn"
-              aria-label="Delete entry"
-              title="Delete entry"
-              class="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 border-none bg-transparent cursor-pointer transition-colors"
-              @click="confirmDelete(item.id)"
-            >
-              <Trash2 class="size-4" />
-            </button>
-          </div>
+        <!-- Line 2: notes (only if present) -->
+        <p v-if="item.notes" class="text-xs italic text-muted-foreground mt-1">{{ item.notes }}</p>
+        <!-- Line 3: Action row — centered -->
+        <div class="flex justify-center gap-3 mt-3">
+          <button
+            data-test="edit-btn"
+            aria-label="Edit entry"
+            title="Edit entry"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+            @click="startEdit(item)"
+          >
+            <Pencil class="size-4" />
+            Edit
+          </button>
+          <button
+            data-test="delete-btn"
+            aria-label="Delete entry"
+            title="Delete entry"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-primary text-primary-foreground text-sm font-medium border-none cursor-pointer hover:opacity-90 transition-opacity"
+            @click="confirmDelete(item.id)"
+          >
+            <Trash2 class="size-4" />
+            Delete
+          </button>
         </div>
       </div>
     </div>

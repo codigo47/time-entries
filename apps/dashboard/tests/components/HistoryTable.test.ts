@@ -67,6 +67,8 @@ describe('HistoryTable', () => {
     expect(wrapper.text()).toContain('Alice')
     expect(wrapper.text()).toContain('Alpha')
     expect(wrapper.text()).toContain('Test note')
+    // date is formatted as mm/dd/yyyy
+    expect(wrapper.text()).toContain('05/01/2026')
   })
 
   it('falls back to IDs when relation names are missing', () => {
@@ -203,9 +205,8 @@ describe('HistoryTable', () => {
     history.filters.sort = undefined
     const wrapper = mount(HistoryTable)
 
-    // Find the "Sort by Date" button
-    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Date'))
-    await sortBtn!.trigger('click')
+    const sortBtn = wrapper.find('[aria-label="Sort by date"]')
+    await sortBtn.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     // current was undefined ?? '-date' = '-date', which !== 'date', so sort = 'date'
@@ -219,8 +220,8 @@ describe('HistoryTable', () => {
     history.meta = { current_page: 1, last_page: 2, per_page: 25, total: 30 }
     const wrapper = mount(HistoryTable)
 
-    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Hours'))
-    await sortBtn!.trigger('click')
+    const sortBtn = wrapper.find('[aria-label="Sort by hours"]')
+    await sortBtn.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     expect(history.filters.sort).toBe('hours')
@@ -233,8 +234,8 @@ describe('HistoryTable', () => {
     history.meta = { current_page: 1, last_page: 2, per_page: 25, total: 30 }
     const wrapper = mount(HistoryTable)
 
-    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Date'))
-    await sortBtn!.trigger('click')
+    const sortBtn = wrapper.find('[aria-label="Sort by date"]')
+    await sortBtn.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     expect(history.filters.sort).toBe('date')
@@ -248,11 +249,22 @@ describe('HistoryTable', () => {
     history.filters.sort = 'date'
     const wrapper = mount(HistoryTable)
 
-    const sortBtn = wrapper.findAll('button').find((el) => el.text().includes('Sort by Date'))
-    await sortBtn!.trigger('click')
+    const sortBtn = wrapper.find('[aria-label="Sort by date"]')
+    await sortBtn.trigger('click')
     await new Promise((r) => setTimeout(r, 10))
 
     expect(history.filters.sort).toBe('-date')
+  })
+
+  it('shows ArrowDown icon when hours sort is descending', () => {
+    const history = useHistoryStore()
+    history.items = []
+    history.meta = { current_page: 1, last_page: 1, per_page: 25, total: 0 }
+    history.filters.sort = '-hours'
+    const wrapper = mount(HistoryTable)
+    // The hours sort button should have active styling (bg-muted)
+    const sortBtn = wrapper.find('[aria-label="Sort by hours"]')
+    expect(sortBtn.classes().join(' ')).toContain('bg-muted')
   })
 
   it('navigates to next page', async () => {

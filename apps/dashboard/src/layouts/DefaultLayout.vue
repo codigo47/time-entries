@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import CompanyContext from '@/components/CompanyContext.vue'
 </script>
 
 <template>
@@ -9,9 +8,9 @@ import CompanyContext from '@/components/CompanyContext.vue'
       class="sticky top-0 z-10 bg-background border-b border-border"
       style="height: 56px;"
     >
-      <div class="mx-auto max-w-6xl h-full flex items-center justify-between px-6">
+      <div class="mx-auto max-w-6xl h-full flex items-center px-6">
         <!-- Product name -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2" data-test="header-logo">
           <span
             style="width: 6px; height: 6px; background: var(--foreground); display: inline-block; flex-shrink: 0;"
             aria-hidden="true"
@@ -19,11 +18,6 @@ import CompanyContext from '@/components/CompanyContext.vue'
           <span
             style="font-family: var(--font-sans); font-size: 15px; font-weight: 600; color: var(--foreground); letter-spacing: -0.01em;"
           >Mason Time Entries</span>
-        </div>
-
-        <!-- Right: Company selector -->
-        <div class="flex items-center gap-4">
-          <CompanyContext />
         </div>
       </div>
     </header>

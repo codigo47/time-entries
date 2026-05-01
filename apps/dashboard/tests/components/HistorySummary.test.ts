@@ -61,7 +61,7 @@ describe('HistorySummary', () => {
     expect(rows[0].text()).toContain('5')
   })
 
-  it('falls back to group_key when group_label is absent', async () => {
+  it('falls back to group_key when group_label is absent (non-date groupBy)', async () => {
     const history = useHistoryStore()
     mockGet.mockResolvedValueOnce({ data: { data: [
       { group_key: '2026-05-01', total_hours: 8, entry_count: 1 },
@@ -74,7 +74,51 @@ describe('HistorySummary', () => {
 
     const rows = wrapper.findAll('[data-test="summary-row"]')
     expect(rows.length).toBe(1)
+    // groupBy defaults to 'company' so no date formatting — shows raw key
     expect(rows[0].text()).toContain('2026-05-01')
+  })
+
+  it('formats dates as mm/dd/yyyy when groupBy is date', async () => {
+    const history = useHistoryStore()
+    mockGet.mockResolvedValue({ data: { data: [] } } as never)
+    const wrapper = mount(HistorySummary)
+    await new Promise((r) => setTimeout(r, 10))
+    vi.clearAllMocks()
+    mockGet.mockResolvedValue({ data: { data: [] } } as never)
+
+    // Switch groupBy to date
+    const select = wrapper.find('[data-test="group-by-select"]')
+    await select.setValue('date')
+    await new Promise((r) => setTimeout(r, 10))
+
+    history.summary = [{ group_key: '2026-05-01', group_label: '2026-05-01', total_hours: 8, entry_count: 1 }]
+    await wrapper.vm.$nextTick()
+
+    const rows = wrapper.findAll('[data-test="summary-row"]')
+    expect(rows.length).toBe(1)
+    expect(rows[0].text()).toContain('05/01/2026')
+  })
+
+  it('formats group_key as date when groupBy is date and group_label is absent', async () => {
+    const history = useHistoryStore()
+    mockGet.mockResolvedValue({ data: { data: [] } } as never)
+    const wrapper = mount(HistorySummary)
+    await new Promise((r) => setTimeout(r, 10))
+    vi.clearAllMocks()
+    mockGet.mockResolvedValue({ data: { data: [] } } as never)
+
+    // Switch groupBy to date
+    const select = wrapper.find('[data-test="group-by-select"]')
+    await select.setValue('date')
+    await new Promise((r) => setTimeout(r, 10))
+
+    // No group_label — falls back to group_key which is also a date string
+    history.summary = [{ group_key: '2026-12-25', total_hours: 4, entry_count: 1 }]
+    await wrapper.vm.$nextTick()
+
+    const rows = wrapper.findAll('[data-test="summary-row"]')
+    expect(rows.length).toBe(1)
+    expect(rows[0].text()).toContain('12/25/2026')
   })
 
   it('reloads summary when groupBy changes', async () => {

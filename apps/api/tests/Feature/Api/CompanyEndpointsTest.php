@@ -8,7 +8,7 @@ it('lists companies with cache headers', function () {
     $response->assertOk();
     expect($response->json('data'))->toHaveCount(3);
     expect($response->headers->get('ETag'))->not->toBeNull();
-    expect($response->headers->get('Cache-Control'))->toContain('private');
+    expect($response->headers->get('Cache-Control'))->toContain('max-age=1200');
 });
 
 it('returns 304 when If-None-Match matches', function () {

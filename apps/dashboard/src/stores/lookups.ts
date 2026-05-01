@@ -8,6 +8,11 @@ export const useLookupsStore = defineStore('lookups', () => {
   const employeesByCompany = ref<Record<string, EmployeeDto[]>>({})
   const projectsByCompany = ref<Record<string, ProjectDto[]>>({})
   const tasksByCompany = ref<Record<string, TaskDto[]>>({})
+  const allEmployees = ref<EmployeeDto[]>([])
+  const allProjects = ref<ProjectDto[]>([])
+  const employeesByProject = ref<Record<string, EmployeeDto[]>>({})
+  let allEmployeesLoaded = false
+  let allProjectsLoaded = false
 
   async function loadCompanies() {
     if (companies.value.length) return
@@ -29,16 +34,50 @@ export const useLookupsStore = defineStore('lookups', () => {
     const { data } = await api.get(`/companies/${companyId}/tasks`)
     tasksByCompany.value = { ...tasksByCompany.value, [companyId]: data.data }
   }
+  async function loadAllEmployees() {
+    if (allEmployeesLoaded) return
+    allEmployeesLoaded = true
+    try {
+      const { data } = await api.get('/employees')
+      allEmployees.value = data.data
+    } catch {
+      allEmployeesLoaded = false
+    }
+  }
+  async function loadAllProjects() {
+    if (allProjectsLoaded) return
+    allProjectsLoaded = true
+    try {
+      const { data } = await api.get('/projects')
+      allProjects.value = data.data
+    } catch {
+      allProjectsLoaded = false
+    }
+  }
+
+  async function loadEmployeesByProject(projectId: string) {
+    if (employeesByProject.value[projectId]) return
+    const { data } = await api.get(`/projects/${projectId}/employees`)
+    employeesByProject.value = { ...employeesByProject.value, [projectId]: data.data }
+  }
 
   function invalidateAll() {
     companies.value = []
     employeesByCompany.value = {}
     projectsByCompany.value = {}
     tasksByCompany.value = {}
+    allEmployees.value = []
+    allProjects.value = []
+    employeesByProject.value = {}
+    allEmployeesLoaded = false
+    allProjectsLoaded = false
   }
 
   return {
     companies, employeesByCompany, projectsByCompany, tasksByCompany,
-    loadCompanies, loadEmployees, loadProjects, loadTasks, invalidateAll,
+    allEmployees, allProjects, employeesByProject,
+    loadCompanies, loadEmployees, loadProjects, loadTasks,
+    loadAllEmployees, loadAllProjects, loadEmployeesByProject,
+    invalidateAll,
   }
 })

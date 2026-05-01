@@ -15,7 +15,6 @@ vi.mock('@/services/api', () => ({
 import { api } from '@/services/api'
 import { useHistoryStore } from '@/stores/history'
 import { useLookupsStore } from '@/stores/lookups'
-import { useCompanyContextStore } from '@/stores/companyContext'
 import HistoryFilters from '@/components/HistoryFilters.vue'
 
 const mockGet = vi.mocked(api.get)
@@ -28,10 +27,52 @@ describe('HistoryFilters', () => {
 
   it('renders filter inputs', () => {
     const wrapper = mount(HistoryFilters)
+    expect(wrapper.find('[data-test="filter-company"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="filter-date-from"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="filter-date-to"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="filter-employee"]').exists()).toBe(true)
     expect(wrapper.find('[data-test="filter-project"]').exists()).toBe(true)
+  })
+
+  it('shows companies in company dropdown from lookups', () => {
+    const lookups = useLookupsStore()
+    lookups.companies = [{ id: 'c1', name: 'Acme' }]
+    const wrapper = mount(HistoryFilters)
+    expect(wrapper.find('[data-test="filter-company"]').text()).toContain('Acme')
+  })
+
+  it('updates company_id filter and clears employee/project filters on change', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    const lookups = useLookupsStore()
+    history.filters.employee_id = 'e1'
+    history.filters.project_id = 'p1'
+    lookups.companies = [{ id: 'c1', name: 'Acme' }]
+    const wrapper = mount(HistoryFilters)
+
+    const select = wrapper.find('[data-test="filter-company"]')
+    await select.setValue('c1')
+    await select.trigger('change')
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.company_id).toBe('c1')
+    expect(history.filters.employee_id).toBeUndefined()
+    expect(history.filters.project_id).toBeUndefined()
+    expect(mockGet).toHaveBeenCalled()
+  })
+
+  it('clears company_id filter when empty value selected', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    history.filters.company_id = 'c1'
+    const wrapper = mount(HistoryFilters)
+
+    const select = wrapper.find('[data-test="filter-company"]')
+    ;(select.element as HTMLSelectElement).value = ''
+    await select.trigger('change')
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(history.filters.company_id).toBeUndefined()
   })
 
   it('updates date_from filter and calls load on change', async () => {
@@ -160,54 +201,69 @@ describe('HistoryFilters', () => {
     expect(history.filters.project_id).toBe('p1')
   })
 
-  it('uses ctx.companyId for employees when filter.company_id is unset and ctx is not all', () => {
+  it('uses history.filters.company_id for employees when set', () => {
     const history = useHistoryStore()
     const lookups = useLookupsStore()
-    const ctx = useCompanyContextStore()
-    // No company_id filter set
-    history.filters.company_id = undefined
-    ctx.companyId = 'c1'
+    history.filters.company_id = 'c1'
     lookups.employeesByCompany = { c1: [{ id: 'e1', name: 'Bob', email: 'b@test.com' }] }
 
     const wrapper = mount(HistoryFilters)
     expect(wrapper.find('[data-test="filter-employee"]').text()).toContain('Bob')
   })
 
-  it('returns empty employee list when ctx.companyId is all and filter.company_id is unset', () => {
-    const history = useHistoryStore()
-    const ctx = useCompanyContextStore()
-    history.filters.company_id = undefined
-    ctx.companyId = 'all'
-
-    const wrapper = mount(HistoryFilters)
-    // Should show only the "All employees" option
-    const options = wrapper.find('[data-test="filter-employee"]').findAll('option')
-    expect(options.length).toBe(1)
-    expect(options[0].text()).toBe('All employees')
-  })
-
-  it('uses ctx.companyId for projects when filter.company_id is unset and ctx is not all', () => {
+  it('shows all employees when filter.company_id is unset', () => {
     const history = useHistoryStore()
     const lookups = useLookupsStore()
-    const ctx = useCompanyContextStore()
     history.filters.company_id = undefined
-    ctx.companyId = 'c2'
+    lookups.allEmployees = [{ id: 'e1', name: 'Carol', email: 'carol@test.com' }]
+
+    const wrapper = mount(HistoryFilters)
+    expect(wrapper.find('[data-test="filter-employee"]').text()).toContain('Carol')
+  })
+
+  it('uses history.filters.company_id for projects when set', () => {
+    const history = useHistoryStore()
+    const lookups = useLookupsStore()
+    history.filters.company_id = 'c2'
     lookups.projectsByCompany = { c2: [{ id: 'p2', company_id: 'c2', name: 'Beta' }] }
 
     const wrapper = mount(HistoryFilters)
     expect(wrapper.find('[data-test="filter-project"]').text()).toContain('Beta')
   })
 
-  it('returns empty project list when ctx.companyId is all and filter.company_id is unset', () => {
+  it('shows all projects when filter.company_id is unset', () => {
     const history = useHistoryStore()
-    const ctx = useCompanyContextStore()
+    const lookups = useLookupsStore()
     history.filters.company_id = undefined
-    ctx.companyId = 'all'
+    lookups.allProjects = [{ id: 'p1', company_id: 'c1', name: 'Omega' }]
 
     const wrapper = mount(HistoryFilters)
-    const options = wrapper.find('[data-test="filter-project"]').findAll('option')
-    expect(options.length).toBe(1)
-    expect(options[0].text()).toBe('All projects')
+    expect(wrapper.find('[data-test="filter-project"]').text()).toContain('Omega')
+  })
+
+  it('calls loadAllEmployees and loadAllProjects on mount when company_id is unset', async () => {
+    mockGet
+      .mockResolvedValueOnce({ data: { data: [{ id: 'e1', name: 'Dan', email: 'd@test.com' }] } } as never)
+      .mockResolvedValueOnce({ data: { data: [{ id: 'p1', company_id: 'c1', name: 'Delta' }] } } as never)
+
+    mount(HistoryFilters)
+    await new Promise((r) => setTimeout(r, 10))
+
+    expect(mockGet).toHaveBeenCalledWith('/employees')
+    expect(mockGet).toHaveBeenCalledWith('/projects')
+  })
+
+  it('does not call loadAllEmployees when a specific company_id filter is set', async () => {
+    mockGet.mockResolvedValue({ data: { data: [], meta: { current_page: 1, last_page: 1, per_page: 25, total: 0 } } } as never)
+    const history = useHistoryStore()
+    history.filters.company_id = 'c1'
+
+    mount(HistoryFilters)
+    await new Promise((r) => setTimeout(r, 10))
+
+    const calls = mockGet.mock.calls.map((c) => c[0])
+    expect(calls).not.toContain('/employees')
+    expect(calls).not.toContain('/projects')
   })
 
   it('returns empty employee list when company has no employees in lookups', () => {

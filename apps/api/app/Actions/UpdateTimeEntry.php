@@ -42,12 +42,29 @@ class UpdateTimeEntry
             ->lockForUpdate()
             ->get();
 
-        foreach ($existing as $other) {
-            if ($other->project_id !== $merged['project_id']) {
-                /** @var Employee|null $emp */
-                $emp = Employee::find($merged['employee_id']);
-                $employeeName = $emp instanceof Employee ? $emp->name : $merged['employee_id'];
+        /** @var Employee|null $emp */
+        $emp = Employee::find($merged['employee_id']);
+        $employeeName = $emp instanceof Employee ? $emp->name : $merged['employee_id'];
 
+        foreach ($existing as $other) {
+            // Exact duplicate: same company, employee, project, task, date
+            if (
+                $other->company_id === $merged['company_id'] &&
+                $other->project_id === $merged['project_id'] &&
+                $other->task_id === $merged['task_id']
+            ) {
+                /** @var \App\Models\Project|null $proj */
+                $proj = \App\Models\Project::find($merged['project_id']);
+                $projectName = $proj instanceof \App\Models\Project ? $proj->name : $merged['project_id'];
+                /** @var \App\Models\Task|null $taskModel */
+                $taskModel = \App\Models\Task::find($merged['task_id']);
+                $taskName = $taskModel instanceof \App\Models\Task ? $taskModel->name : $merged['task_id'];
+                $formattedDate = date('m/d/Y', strtotime($merged['date']));
+                $errors['date'][] = "An entry already exists for {$employeeName} working on '{$taskName}' for project '{$projectName}' on {$formattedDate}. To change the hours or notes, edit the existing entry.";
+                break;
+            }
+
+            if ($other->project_id !== $merged['project_id']) {
                 /** @var Project|null $proj */
                 $proj = Project::find($other->project_id);
                 $existingProjectName = $proj instanceof Project ? $proj->name : $other->project_id;

@@ -18,7 +18,7 @@ An employee can only work on one project per date. Enforced in `CreateTimeEntrie
 
 ## Cache headers
 
-Lookup endpoints set `Cache-Control: private, max-age=60` and an `ETag` from `EtagService`. They return `304` on `If-None-Match` match. The dashboard's axios layer auto-replays the cached body on 304.
+Lookup endpoints set `Cache-Control: private, max-age=1200` (20 minutes) and an `ETag` from `EtagService`. They return `304` on `If-None-Match` match. The dashboard's axios layer auto-replays the cached body on 304.
 
 ## Tests
 

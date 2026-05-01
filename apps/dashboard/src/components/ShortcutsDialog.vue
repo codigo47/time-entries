@@ -5,7 +5,9 @@ const shortcuts = [
   ['Ctrl/Cmd + D', 'Duplicate row'],
   ['Ctrl/Cmd + Backspace', 'Delete row'],
   ['Ctrl/Cmd + Enter', 'Submit'],
-  ['Ctrl/Cmd + 1 / 2', 'Switch tabs'],
+  ['Ctrl/Cmd + 1', 'Switch to New Entries tab'],
+  ['Ctrl/Cmd + 2', 'Switch to History tab'],
+  ['Ctrl/Cmd + 3', 'Switch to Summary tab'],
   ['?', 'Open this help'],
 ]
 </script>
