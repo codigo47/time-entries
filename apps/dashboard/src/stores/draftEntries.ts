@@ -16,8 +16,16 @@ export const useDraftEntriesStore = defineStore('draftEntries', () => {
 
   watch(rows, (v) => localStorage.setItem(STORAGE_KEY, JSON.stringify(v)), { deep: true })
 
+  function todayIso(): string {
+    const d = new Date()
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
   function addRow(seed: Partial<TimeEntryDraft> = {}) {
-    rows.value.push({ _id: crypto.randomUUID(), notes: null, ...seed } as TimeEntryDraft)
+    rows.value.push({ _id: crypto.randomUUID(), notes: null, date: todayIso(), ...seed } as TimeEntryDraft)
   }
   function duplicate(index: number) {
     const src = rows.value[index]
