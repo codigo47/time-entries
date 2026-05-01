@@ -103,7 +103,8 @@ php artisan serve --host=127.0.0.1 --port=8000
 **Terminal 4 — Frontend (dashboard)**
 
 ```bash
-npm --workspace apps/dashboard run dev
+cd apps/dashboard
+npm run dev
 ```
 
 Open http://127.0.0.1:5173.
