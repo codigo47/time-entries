@@ -19,7 +19,12 @@ defineExpose({ value })
 
 <template>
   <Select v-model="value">
-    <SelectTrigger class="w-56" data-test="company-context">
+    <SelectTrigger
+      class="w-56"
+      data-test="company-context"
+      title="Changes the company across all entries and filters"
+      aria-label="Changes the company across all entries and filters"
+    >
       <SelectValue placeholder="Company" />
     </SelectTrigger>
     <SelectContent>
