@@ -27,7 +27,7 @@
   --destructive:            #DC2626;
   --border:                 #E5E5E5;
   --input:                  #E5E5E5;
-  --ring:                   #0A0A0A;
+  --ring:                   #2563EB;
 
   /* Charts */
   --chart-1: #0A0A0A;
@@ -44,7 +44,7 @@
   --sidebar-accent:                   #F5F5F5;
   --sidebar-accent-foreground:        #171717;
   --sidebar-border:                   #E5E5E5;
-  --sidebar-ring:                     #0A0A0A;
+  --sidebar-ring:                     #2563EB;
 }
 
 /* ── Dark mode ───────────────────────────────────────────────── */
@@ -68,7 +68,7 @@
   --destructive:            #DC2626;
   --border:                 #262626;
   --input:                  #262626;
-  --ring:                   #FAFAFA;
+  --ring:                   #3B82F6;
 
   --sidebar:                #1A1A1A;
   --sidebar-foreground:     #FAFAFA;
@@ -77,7 +77,7 @@
   --sidebar-accent:         #1A1A1A;
   --sidebar-accent-foreground: #FAFAFA;
   --sidebar-border:         #262626;
-  --sidebar-ring:           #FAFAFA;
+  --sidebar-ring:           #3B82F6;
 }
 
 /* ── Tailwind @theme — expose as utilities ───────────────────── */
@@ -168,5 +168,12 @@
     color: var(--foreground);
     display: inline-block;
     line-height: 1.4;
+  }
+
+  /* Visible focus indicator on every focusable element */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 3px;
   }
 }
