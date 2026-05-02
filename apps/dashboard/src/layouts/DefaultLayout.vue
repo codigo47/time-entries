@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { Keyboard } from 'lucide-vue-next'
 import CompanyContext from '@/components/CompanyContext.vue'
+import { useUiStore } from '@/stores/ui'
+
+const ui = useUiStore()
 </script>
 
 <template>
@@ -21,7 +25,18 @@ import CompanyContext from '@/components/CompanyContext.vue'
           >Mason Time Entries</span>
         </div>
         <!-- Global company selector -->
-        <div class="ml-auto">
+        <div class="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            data-test="shortcuts-help-btn"
+            aria-label="Show keyboard shortcuts (F1)"
+            title="Keyboard shortcuts (F1)"
+            class="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            @click="ui.openShortcuts()"
+          >
+            <Keyboard class="size-3.5" />
+            <kbd class="text-[10px] font-mono px-1 py-0.5 border border-border rounded bg-muted">F1</kbd>
+          </button>
           <CompanyContext />
         </div>
       </div>

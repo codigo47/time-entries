@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useKeyboardShortcuts } from '@/composables/useKeyboardShortcuts'
 import { useCompanyContextStore } from '@/stores/companyContext'
 import { useHistoryStore } from '@/stores/history'
 import { useDraftEntriesStore } from '@/stores/draftEntries'
+import { useUiStore } from '@/stores/ui'
 import NewEntriesTab from '@/components/NewEntriesTab.vue'
 import HistoryTab from '@/components/HistoryTab.vue'
 import HistorySummary from '@/components/HistorySummary.vue'
@@ -17,6 +18,7 @@ const router = useRouter()
 const ctx = useCompanyContextStore()
 const history = useHistoryStore()
 const drafts = useDraftEntriesStore()
+const ui = useUiStore()
 
 // When the global company changes, sync both History and New Entries
 // even when their tabs are not currently mounted.
@@ -44,8 +46,6 @@ watch(() => ctx.companyId, (id) => {
   }
 })
 
-const showShortcuts = ref(false)
-
 const tab = computed({
   get: () => {
     const t = route.query.tab
@@ -56,7 +56,8 @@ const tab = computed({
 })
 
 useKeyboardShortcuts([
-  { combo: '?', handler: () => { showShortcuts.value = !showShortcuts.value }, preventDefault: false },
+  { combo: 'f1', handler: () => ui.toggleShortcuts() },
+  { combo: '?', handler: () => ui.toggleShortcuts(), preventDefault: false },
   { combo: 'ctrl+1', handler: () => { tab.value = 'new' } },
   /* v8 ignore next */
   { combo: 'cmd+1', handler: () => { tab.value = 'new' } },
@@ -76,7 +77,7 @@ useKeyboardShortcuts([
         Time Entries
       </h1>
     </div>
-    <ShortcutsDialog v-if="showShortcuts" />
+    <ShortcutsDialog />
     <!-- v8 ignore next -->
     <Tabs v-model="tab" class="w-full">
       <TabsList class="mb-4">

@@ -17,6 +17,7 @@ import { api } from '@/services/api'
 import { useCompanyContextStore } from '@/stores/companyContext'
 import { useHistoryStore } from '@/stores/history'
 import { useDraftEntriesStore } from '@/stores/draftEntries'
+import { useUiStore } from '@/stores/ui'
 import EntriesPage from '@/pages/EntriesPage.vue'
 
 const mockGet = vi.mocked(api.get)
@@ -109,10 +110,11 @@ describe('EntriesPage', () => {
   it('does not show shortcuts dialog by default', async () => {
     const router = makeRouter('/entries')
     await router.isReady()
-    const wrapper = mount(EntriesPage, {
+    mount(EntriesPage, {
       global: { plugins: [router], stubs: globalStubs },
     })
-    expect(wrapper.find('[data-test="shortcuts-dialog-stub"]').exists()).toBe(false)
+    const ui = useUiStore()
+    expect(ui.shortcutsOpen).toBe(false)
   })
 
   it('shows shortcuts dialog when ? key is pressed', async () => {
@@ -121,11 +123,12 @@ describe('EntriesPage', () => {
     const wrapper = mount(EntriesPage, {
       global: { plugins: [router], stubs: globalStubs },
     })
+    const ui = useUiStore()
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }))
     await wrapper.vm.$nextTick()
 
-    expect(wrapper.find('[data-test="shortcuts-dialog-stub"]').exists()).toBe(true)
+    expect(ui.shortcutsOpen).toBe(true)
   })
 
   it('hides shortcuts dialog on second ? press (toggle)', async () => {
@@ -134,14 +137,32 @@ describe('EntriesPage', () => {
     const wrapper = mount(EntriesPage, {
       global: { plugins: [router], stubs: globalStubs },
     })
+    const ui = useUiStore()
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }))
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-test="shortcuts-dialog-stub"]').exists()).toBe(true)
+    expect(ui.shortcutsOpen).toBe(true)
 
     window.dispatchEvent(new KeyboardEvent('keydown', { key: '?', bubbles: true }))
     await wrapper.vm.$nextTick()
-    expect(wrapper.find('[data-test="shortcuts-dialog-stub"]').exists()).toBe(false)
+    expect(ui.shortcutsOpen).toBe(false)
+  })
+
+  it('toggles shortcuts dialog on F1 key press', async () => {
+    const router = makeRouter('/entries')
+    await router.isReady()
+    const wrapper = mount(EntriesPage, {
+      global: { plugins: [router], stubs: globalStubs },
+    })
+    const ui = useUiStore()
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1', bubbles: true }))
+    await wrapper.vm.$nextTick()
+    expect(ui.shortcutsOpen).toBe(true)
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1', bubbles: true }))
+    await wrapper.vm.$nextTick()
+    expect(ui.shortcutsOpen).toBe(false)
   })
 
   it('switches to new tab on Ctrl+1', async () => {

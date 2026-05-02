@@ -13,6 +13,7 @@ vi.mock('@/services/api', () => ({
 }))
 
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
+import { useUiStore } from '@/stores/ui'
 
 describe('DefaultLayout', () => {
   beforeEach(() => {
@@ -41,5 +42,21 @@ describe('DefaultLayout', () => {
       slots: { default: '<span data-test="slot-content">Hello</span>' },
     })
     expect(wrapper.find('[data-test="slot-content"]').exists()).toBe(true)
+  })
+
+  it('renders the shortcuts help button in the header', () => {
+    const wrapper = mount(DefaultLayout, {
+      global: { stubs: { CompanyContext: { template: '<div data-test="company-context" />' } } },
+    })
+    expect(wrapper.find('[data-test="shortcuts-help-btn"]').exists()).toBe(true)
+  })
+
+  it('clicking the shortcuts help button sets ui.shortcutsOpen to true', async () => {
+    const ui = useUiStore()
+    const wrapper = mount(DefaultLayout, {
+      global: { stubs: { CompanyContext: { template: '<div data-test="company-context" />' } } },
+    })
+    await wrapper.find('[data-test="shortcuts-help-btn"]').trigger('click')
+    expect(ui.shortcutsOpen).toBe(true)
   })
 })
