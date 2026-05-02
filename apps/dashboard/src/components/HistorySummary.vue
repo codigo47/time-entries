@@ -6,9 +6,13 @@ import { formatDateMDY } from '@/utils/format'
 const history = useHistoryStore()
 const groupBy = ref('company')
 
-watch(groupBy, (v) => {
-  history.loadSummary(v)
-}, { immediate: true })
+// Reload the summary on group-by changes AND whenever the shared filters
+// (e.g. the global Company selector) change while this tab is mounted.
+watch(
+  [groupBy, () => history.filters],
+  () => history.loadSummary(groupBy.value),
+  { immediate: true, deep: true },
+)
 </script>
 
 <template>
